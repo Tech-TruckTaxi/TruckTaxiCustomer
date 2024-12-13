@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "493007623337",
+    "project_id": "trucktaxicus",
+    "storage_bucket": "trucktaxicus.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493007623337:android:ddd2cef895400f40cb85b8",
+        "android_client_info": {
+          "package_name": "com.trucktaxi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_KnUhQVMrZyh1rLGbKXS2wrJ8SdGkMsQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
