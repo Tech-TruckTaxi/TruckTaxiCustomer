@@ -24,6 +24,8 @@ import { AuthContext } from '../context/context';
 
 
 const ComProfileScreen = ({ navigation, route }) => {
+    console.log("NEW USER ***********************");
+    
     const { result } = route.params;
     const { phone } = route.params;
     const { signIn } = React.useContext(AuthContext);

@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   PermissionsAndroid,
@@ -18,12 +18,12 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const ITEM_SIZE = Platform.OS === 'ios' ? width * 0.72 : width * 0.54;
-const {width, height} = Dimensions.get('window');
-import {P, H5} from '../components/typography';
+const { width, height } = Dimensions.get('window');
+import { P, H5 } from '../components/typography';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import LinearGradient from 'react-native-linear-gradient';
-import {IndexPath, Layout, Select, SelectItem} from '@ui-kitten/components';
-import {useDispatch, useSelector} from 'react-redux';
+import { IndexPath, Layout, Select, SelectItem } from '@ui-kitten/components';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   selectDestination,
   selectOrigin,
@@ -36,14 +36,15 @@ import moment from 'moment';
 import messaging from '@react-native-firebase/messaging';
 import DatePicker from 'react-native-date-picker';
 import Color from '../Global/Color';
-import {Manrope} from '../Global/FontFamily';
-import {Iconviewcomponent} from '../Global/Icontag';
+import { Manrope } from '../Global/FontFamily';
+import { Iconviewcomponent } from '../Global/Icontag';
 import RBSheet from 'react-native-raw-bottom-sheet';
+import { useFocusEffect } from '@react-navigation/native';
 
-const HomeScreen = ({navigation, route}) => {
-  console.log('CCCCCCCCCCCCCCC', route.params);
+const HomeScreen = ({ navigation, route }) => {
+  console.log('CCCCCCCCCCCCCCC', route.params.Distance.distance);
 
-  const {width, height} = Dimensions.get('window');
+  const { width, height } = Dimensions.get('window');
   const [showLoading, setshowLoading] = useState(false);
   const [vehcilelist, setvehcilelist] = useState([]);
   const [selectedvehcilelist, setselectedvehcilelist] = useState({
@@ -109,16 +110,15 @@ const HomeScreen = ({navigation, route}) => {
       name: 'closed type',
     },
   ]);
+  
+  // const [intercitydata, setIntercitydata] = useState<null>({
+  //   baseminute: 0,
+  //   basekm: 0,
+  //   basefare: 0,
+  // });
+  const [intercitydata, setIntercitydata] = useState({ baseminute: 0, basekm: 0, basefare: 0 });
 
-  const [selectedVehicle, setSelectedVehicle] = useState({
-    addkmcharge: '20',
-    addminutecharge: '3',
-    feet: '7.5 feet',
-    id: 1,
-    loadcapacity: '1000 kgs',
-    url: 'https://trucktaxi.co.in/api/images/tataace.png',
-    vehicletype: 'TataAce',
-  });
+  // const [intercitydata, setIntercitydata] = useState('');
 
   // ================NEW WORK =======================
   const [goodType, setgoodType] = React.useState([]);
@@ -155,9 +155,10 @@ const HomeScreen = ({navigation, route}) => {
     index: 0,
     count: 1,
   });
-  const [isfarepac, setisfarepac]=useState(false);
+  const [isfarepac, setisfarepac] = useState(false);
   const [Farevalue, setFarevalue] = useState([]);
   const [selectedFarevalue, setselectedFarevalue] = useState([]);
+  const [selectInterBase, setselectInterBaseValue] = useState('');
   const refRBSheet = useRef();
   const [mobilenumber, setMobileNumber] = useState('');
   const refRBSheetGoodsType = useRef();
@@ -165,18 +166,23 @@ const HomeScreen = ({navigation, route}) => {
   const refRBSheettripcount = useRef();
   const refRBSheetVehicleFare = useRef();
 
-  console.log("Params -------------------- :",route.params?.Distance);
-  
+  const [getDistance, segetDistance] = useState(route.params?.Distance.distance != undefined ? route.params?.Distance.distance : "00");
+  const [getInterCityFare, seGetInterCityFare] = useState('');
+
+  console.log("Params --------------------123 :", getDistance);
+
   useEffect(() => {
+    console.log("**************** WELCOME ***************");
+
     var date = moment().format('DD/MM/YYYY hh:mm A');
     setDate(date);
 
     navigation.setOptions({
       title: <Text>Create Load</Text>,
       headerRight: () => (
-        <View style={{flexDirection: 'row'}}>
+        <View style={{ flexDirection: 'row' }}>
           <FontAwesome
-            style={{padding: 10}}
+            style={{ padding: 10 }}
             onPress={() => {
               refresh();
             }}
@@ -189,8 +195,30 @@ const HomeScreen = ({navigation, route}) => {
       ),
     });
   }, []);
+  useEffect(
+    () => {
+      if (route?.params?.Distance.distance > 25) {
+        Getintercityfun();
+        console.log("VVVVVVVVVVVVV");
+        console.log("VVVVVVVVVVVVV");
+        console.log("VVVVVVVVVVVVV");
+        console.log("VVVVVVVVVVVVV");
+        console.log("VVVVVVVVVVVVV");
+
+      }
+
+    }, [route?.params?.Distance.distance != undefined]
+  )
 
   useEffect(() => {
+    // if(30 > 25)
+    //   {
+    //     console.log("zzzzzzzzzzzzzzzzzzzzz");
+    //     console.log("zzzzzzzzzzzzzzzzzzzzz");
+    //     console.log("zzzzzzzzzzzzzzzzzzzzz");
+
+    //     Getintercityfun();
+    //   }
     if (!origin) {
       setinitorigin('Please Select Pickup location');
       setinitdrop('Please Select Drop location');
@@ -204,6 +232,8 @@ const HomeScreen = ({navigation, route}) => {
   }, [origin, destination]);
 
   useEffect(() => {
+
+
     AsyncStorage.getItem('userdata').then(userdata => {
       AsyncStorage.getItem('userToken').then(value => {
         let parseddata = JSON.parse(userdata);
@@ -270,6 +300,26 @@ const HomeScreen = ({navigation, route}) => {
     reload();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log(" route.params?.Distance.distance",route?.params?.Distance?.distance);
+     if(route.params?.Distance.distance !== undefined)
+     {
+      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
+      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
+      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
+      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
+      
+      
+      Getintercityfun();
+     }
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [])
+  );
+
   const reload = () => {
     setshowLoading(true);
     requestLocationPermission();
@@ -293,9 +343,9 @@ const HomeScreen = ({navigation, route}) => {
 
         fetch(
           'https://trucktaxi.co.in/api/customer/getvehicletypes?cityid=' +
-            parseddata.cityid,
+          parseddata.cityid,
           requestOptions,
-         )
+        )
           .then(response => response.json())
           .then(result => {
             setshowLoading(false);
@@ -449,7 +499,7 @@ const HomeScreen = ({navigation, route}) => {
 
   if (showLoading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -472,9 +522,9 @@ const HomeScreen = ({navigation, route}) => {
         };
         fetch(
           'https://trucktaxi.co.in/api/customer/getpackages?vehicleid=' +
-            item.id +
-            '&cityid=' +
-            parseddata.cityid,
+          item.id +
+          '&cityid=' +
+          parseddata.cityid,
           requestOptions,
         )
           .then(response => response.json())
@@ -488,9 +538,9 @@ const HomeScreen = ({navigation, route}) => {
 
         fetch(
           'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
-            item.id +
-            '&cityid=' +
-            parseddata.cityid,
+          item.id +
+          '&cityid=' +
+          parseddata.cityid,
           requestOptions,
         )
           .then(response => response.json())
@@ -503,9 +553,9 @@ const HomeScreen = ({navigation, route}) => {
 
         fetch(
           'https://trucktaxi.co.in/api/customer/getnightfare?vehicleid=' +
-            item.id +
-            '&cityid=' +
-            parseddata.cityid,
+          item.id +
+          '&cityid=' +
+          parseddata.cityid,
           requestOptions,
         )
           .then(response => response.json())
@@ -539,9 +589,9 @@ const HomeScreen = ({navigation, route}) => {
         if (item?.name == 'Package Fare') {
           fetch(
             'https://trucktaxi.co.in/api/customer/getpackages?vehicleid=' +
-              vehicleselected.id +
-              '&cityid=' +
-              parseddata.cityid,
+            vehicleselected.id +
+            '&cityid=' +
+            parseddata.cityid,
             requestOptions,
           )
             .then(response => response.json())
@@ -561,38 +611,59 @@ const HomeScreen = ({navigation, route}) => {
         } else {
           if (item?.name == 'Intercity Fare') {
             console.log('intercity fare', requestOptions);
+            // console.log("Distance ================= :", route.params?.Distance.distance);
 
-            fetch(
-              'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
-                vehicleselected.id +
-                '&cityid=' +
-                parseddata.cityid,
-              requestOptions,
-            )
-              .then(response => response.json())
-              .then(result => {
-                // console.log('intercityType', result);
-                console.log(
-                  '<====== Intercity Fare nnnnnnnnnnnnn =====>: ',
-                  result?.data,
-                ); 
-                               
+
+            const requestOptions = {
+              method: "GET",
+              redirect: "follow"
+            };
+
+            fetch('https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' + route.params?.Distance.distance + '&vehicletype=' + vehicleselected.id, requestOptions)
+              .then((response) => response.json())
+              .then((result) => {
+                console.log("InterCity Fare Result *************** ", result);
                 setshowLoading(false);
                 setFarevalue(result?.data);
+                // setselectInterBaseValue(result?.data)
                 setselectedFarevalue(result?.data[0]);
-                // loadintercity();
+
               })
-              .catch(error =>
-                console.log('catch in get_interCity_list:', error),
-              );
+              .catch((error) => console.error("catch in getinterbase_amount :", error));
+
+            // fetch(
+            //   'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
+            //   vehicleselected.id +
+            //   '&cityid=' +
+            //   parseddata.cityid,
+            //   requestOptions,
+            // )
+            //   .then(response => response.json())
+            //   .then(result => {
+            //     // console.log('intercityType', result);
+            //     console.log(
+            //       '<====== Intercity Fare nnnnnnnnnnnnn =====>: ',
+            //       result?.data,
+            //     );
+
+            //     setshowLoading(false);
+            //     setFarevalue(result?.data);
+            //     setselectedFarevalue(result?.data[0]);
+            //     // loadintercity();
+            //   })
+            //   .catch(error =>
+            //     console.log('catch in get_interCity_list:', error),
+            //   );
+
+
           } else {
             if (item?.name == 'Night Fare') {
               console.log('night fare');
               fetch(
                 'https://trucktaxi.co.in/api/customer/getnightfare?vehicleid=' +
-                  vehicleselected?.id +
-                  '&cityid=' +
-                  parseddata.cityid,
+                vehicleselected?.id +
+                '&cityid=' +
+                parseddata.cityid,
                 requestOptions,
               )
                 // fetch(
@@ -729,606 +800,48 @@ const HomeScreen = ({navigation, route}) => {
       // navigation.navigate('bookpreview', data);
     }
   };
+  const Getintercityfun = async () => {
+    try {
+      if (route?.params?.Distance.distance >= 25) {
+        const requestOptions = {
+          method: "GET",
+          redirect: "follow"
+        };
+        console.log(" route.params?.Distance.distance", route.params?.Distance.distance);
+        
+        fetch('https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' + route.params?.Distance.distance + '&vehicletype=' + vehicleselected.id, requestOptions)
+          .then((response) => response.json())
+          .then((result) => {
+            console.log("InterCity Fare Result *************** ", result?.data[0]);
+            setshowLoading(false);
+            if (!result || !result.data || !Array.isArray(result.data) || result.data.length === 0) {
+              throw new Error("Invalid response: Data is undefined or empty");
+            }
+            // setFarevalue(result?.data);
+            // setselectInterBaseValue(result?.data)
+            // setselectedFarevalue(result?.data[0]);
+            console.log("FareFareFareFareFareFareFareFare");
+            console.log("FareFareFareFareFareFareFareFare");
+            console.log("FareFareFareFareFareFareFareFare",result?.data[0]);
+            
+            setIntercitydata(result?.data[0])
+
+          })
+          .catch((error) => console.error("catch in getinterbase_amount :", error));
+        console.log("gggggggggggggggggggggggg");
+      }
+
+
+    } catch (error) {
+      console.log("Catch IN Intercity", error);
+
+    }
+  }
+  // console.log(" route.params?.Distance.distance  ****************************:", route.params?.Distance.distance)
 
   return (
-    // <ScrollView>
-    //   <View style={{width: '100%', marginTop: 20}}>
-    //     <Text
-    //       style={{
-    //         fontSize: 16,
-    //         color: Color.black,
-    //         fontFamily: Manrope.SemiBold,
-    //         paddingHorizontal: 20,
-    //       }}>
-    //       Choose Your Vehicle
-    //     </Text>
-    //     <FlatList
-    //       showsHorizontalScrollIndicator={false}
-    //       contentContainerStyle={styles.flatList}
-    //       horizontal={true}
-    //       data={vehcilelist}
-    //       keyExtractor={item => item.id.toString()}
-    //       renderItem={({item, index}) => {
-    //         const isFocused = selectedvehcilelist
-    //           ? item.vehicletype == selectedvehcilelist.vehicletype
-    //           : false;
-    //         if (isFocused) {
-    //           onSelectVehicle(item);
-    //         }
-    //         return (
-    //           <View>
-    //             <View
-    //               style={{
-    //                 ...styles.vehicle,
-    //                 overflow: 'hidden',
-    //                 borderRadius: 10,
-    //                 borderColor: isFocused ? Color.primary : Color.lightgrey,
-    //                 borderWidth: isFocused ? 5 : 1,
-    //               }}>
-    //               <TouchableOpacity
-    //                 key={index}
-    //                 onPress={() => onSelectVehicle(item)}>
-    //                 <Image style={styles.vehicleImg} source={{uri: item.url}} />
-    //                 <Text style={styles.vehicleName}>{item.vehicletype}</Text>
-    //                 <Text style={styles.vehicleName}>
-    //                   {' '}
-    //                   {item.loadcapacity}{' '}
-    //                 </Text>
-    //               </TouchableOpacity>
-    //             </View>
-    //           </View>
-    //         );
-    //       }}
-    //     />
 
-    //     {selectedvehcilelist != null && (
-    //       <View style={styles.typeView}>
-    //         <Text
-    //           style={{
-    //             paddingStart: 20,
-    //             paddingVertical: 5,
-    //             fontSize: 16,
-    //             color: Color.lightBlack,
-    //             fontFamily: Manrope.Bold,
-    //           }}>
-    //           Vehicle Type:{' '}
-    //         </Text>
-    //         <TouchableOpacity
-    //           onPress={() => {
-    //             setVehicleTypeVisible(true);
-    //           }}
-    //           style={{flexDirection: 'row', alignItems: 'center'}}>
-    //           <Text
-    //             style={{
-    //               fontSize: 14,
-    //               color: Color.black,
-    //               paddingHorizontal: 5,
-    //               textTransform: 'uppercase',
-    //               fontWeight: '500',
-    //             }}>
-    //             {selectVehicle?.name != undefined
-    //               ? selectVehicle?.name
-    //               : 'open type'}
-    //           </Text>
-    //           <Iconviewcomponent
-    //             Icontag={'Ionicons'}
-    //             iconname={'chevron-down'}
-    //             icon_size={20}
-    //             iconstyle={{color: Color.black2, marginRight: 10}}
-    //           />
-    //         </TouchableOpacity>
-    //         <Modal
-    //           visible={vehicleTypeVisible}
-    //           transparent
-    //           animationType="slide">
-    //           <View
-    //             style={{
-    //               backgroundColor: Color.transparantBlack,
-    //               flex: 1,
-    //             }}
-    //           />
-    //           <View
-    //             style={{
-    //               backgroundColor: Color.white,
-    //               // flex: 1,
-    //               borderTopLeftRadius: 10,
-    //               borderTopRightRadius: 10,
-    //               padding: 10,
-    //             }}>
-    //             <Text
-    //               style={{
-    //                 fontSize: 16,
-    //                 color: Color.black,
-    //                 paddingHorizontal: 5,
-    //                 fontWeight: '500',
-    //                 marginVertical: 10,
-    //               }}>
-    //               Select Your Vehicle Type
-    //             </Text>
-    //             {vehicleType?.map((item, index) => {
-    //               return (
-    //                 <TouchableOpacity
-    //                   key={index}
-    //                   onPress={() => {
-    //                     setSelectVehicle(item);
-    //                     setSelectVehicleType(item.type);
-    //                     setVehicleTypeVisible(false);
-    //                   }}>
-    //                   <Text
-    //                     style={{
-    //                       fontSize: 16,
-    //                       color: Color.black,
-    //                       paddingHorizontal: 5,
-    //                       fontWeight: '500',
-    //                       textAlign: 'center',
-    //                       textTransform: 'uppercase',
-    //                       marginVertical: 10,
-    //                     }}>
-    //                     {item?.name}
-    //                   </Text>
-    //                   <View
-    //                     style={{
-    //                       height: 1,
-    //                       backgroundColor: Color.cloudyGrey,
-    //                     }}
-    //                   />
-    //                 </TouchableOpacity>
-    //               );
-    //             })}
-    //           </View>
-    //         </Modal>
-    //       </View>
-    //     )}
-    //   </View>
-    //   <View style={styles.containernormal}>
-    //     <View
-    //       style={{
-    //         width: '95%',
-    //         flexDirection: 'row',
-    //         justifyContent: 'space-between',
-    //         alignItems: 'center',
-    //       }}>
-    //       <View
-    //         style={{
-    //           flex: 1,
-    //           justifyContent: 'flex-start',
-    //           alignItems: 'flex-start',
-    //         }}>
-    //         <Text
-    //           style={{
-    //             fontSize: 16,
-    //             color: Color.lightBlack,
-    //             fontFamily: Manrope.SemiBold,
-    //             paddingVertical: 10,
-    //           }}>
-    //           Pickup Location :
-    //         </Text>
-    //         <Text
-    //           style={{
-    //             fontSize: 16,
-    //             color: Color.lightBlack,
-    //             fontFamily: Manrope.SemiBold,
-    //             paddingVertical: 10,
-    //           }}>
-    //           Drop Location :
-    //         </Text>
-    //       </View>
-    //       <View
-    //         style={{
-    //           flex: 1.5,
-    //           justifyContent: 'flex-start',
-    //           alignItems: 'flex-start',
-    //         }}>
-    //         {origin != null && origin != undefined && origin != ' ' ? (
-    //           <View>
-    //             <View style={{paddingVertical: 5}}>
-    //               <Text
-    //                 style={{
-    //                   fontSize: 16,
-    //                   textAlign: 'justify',
-    //                   color: Color.black,
-    //                   fontFamily: Manrope.Bold,
-    //                 }}>
-    //                 {initorigin}
-    //               </Text>
-    //               <TouchableOpacity
-    //                 onPress={() => navigation.navigate('pickupoint')}>
-    //                 <Text
-    //                   style={{
-    //                     color: Color.primary,
-    //                     fontSize: 14,
-    //                     fontFamily: Manrope.Bold,
-    //                     fontWeight: 'bold',
-    //                     textDecorationLine: 'underline',
-    //                   }}>
-    //                   Edit
-    //                 </Text>
-    //               </TouchableOpacity>
-    //             </View>
-    //             <View style={{paddingVertical: 5}}>
-    //               <Text
-    //                 style={{
-    //                   fontSize: 16,
-    //                   textAlign: 'justify',
-    //                   color: Color.black,
-    //                   fontFamily: Manrope.Bold,
-    //                 }}>
-    //                 {initdrop}
-    //               </Text>
-    //               <TouchableOpacity
-    //                 onPress={() => navigation.navigate('pickupoint')}>
-    //                 <Text
-    //                   style={{
-    //                     color: Color.primary,
-    //                     fontSize: 14,
-    //                     fontFamily: Manrope.Bold,
-    //                     fontWeight: 'bold',
-    //                     textDecorationLine: 'underline',
-    //                   }}>
-    //                   Edit
-    //                 </Text>
-    //               </TouchableOpacity>
-    //             </View>
-    //           </View>
-    //         ) : (
-    //           <TouchableOpacity
-    //             onPress={() => navigation.navigate('pickupoint')}
-    //             style={{
-    //               width: '80%',
-    //               height: 45,
-    //               backgroundColor: Color.primary,
-    //               borderRadius: 5,
-    //               justifyContent: 'center',
-    //               alignItems: 'center',
-    //             }}>
-    //             <Text style={styles.location}>Choose Location</Text>
-    //           </TouchableOpacity>
-    //         )}
-    //       </View>
-    //     </View>
-
-    //     {/* <View style={styles.action}>
-    //                 <FontAwesome style={styles.icon} name="map-marker" color="#828282" size={20} />
-    //                 <TextInput
-    //                     placeholder="Please Select Pickup"
-    //                     placeholderTextColor="#666666"
-    //                     value={initorigin}
-    //                     style={[
-    //                         styles.textInput
-    //                     ]}
-    //                     onPressIn={() => {
-    //                         navigation.navigate('pickupoint');
-    //                     }}
-    //                     autoCapitalize="none"
-
-    //                 />
-    //             </View>
-
-    //             <View style={styles.action}>
-    //                 <FontAwesome style={styles.icon} name="map-marker" color={'#828282'} size={20} />
-    //                 <TextInput
-    //                     placeholder="Please Select Drop Location"
-    //                     placeholderTextColor="#666666"
-    //                     value={initdrop}
-    //                     onPressIn={() => {
-    //                         navigation.navigate('destinationpoint');
-    //                     }}
-    //                     style={[
-    //                         styles.textInput
-    //                     ]}
-    //                     autoCapitalize="none"
-
-    //                 />
-    //             </View> */}
-
-    //     <View style={{marginVertical: 10}}>
-    //       <Text
-    //         style={{
-    //           fontSize: 16,
-    //           color: Color.lightBlack,
-    //           fontFamily: Manrope.SemiBold,
-    //           paddingVertical: 5,
-    //         }}>
-    //         Date & Time
-    //       </Text>
-    //       <TouchableOpacity
-    //         onPress={() => {
-    //           setShow(true);
-    //         }}>
-    //         <View style={styles.action}>
-    //           <FontAwesome
-    //             style={styles.icon}
-    //             name="calendar-plus-o"
-    //             color={'#828282'}
-    //             size={20}
-    //           />
-    //           <View style={{backgroundColor: '#fff', borderRadius: 20}}>
-    //             {show && (
-    //               <DatePicker
-    //                 modal
-    //                 open={show}
-
-    //                 date={tdate}
-    //                 mode="datetime"
-    //                 minimumDate={new Date()}
-    //                 onConfirm={dated => {
-    //                   onChange(dated);
-    //                   setShow(false);
-    //                 }}
-    //                 onCancel={() => {
-    //                   setShow(false);
-    //                 }}
-    //               />
-    //             )}
-    //           </View>
-
-    //           <View
-    //             style={{
-    //               backgroundColor: '#fff',
-    //               borderRadius: 20,
-    //               paddingTop: 6,
-    //             }}>
-    //             <TextInput
-    //               placeholder="Select Date And Time"
-    //               placeholderTextColor="#666666"
-    //               value={dateobj}
-    //               style={[styles.textInput]}
-    //               editable={false}
-    //             />
-    //           </View>
-    //         </View>
-    //       </TouchableOpacity>
-    //     </View>
-
-    //     <View style={{marginVertical: 0}}>
-    //       <Text
-    //         style={{
-    //           fontSize: 16,
-    //           color: Color.lightBlack,
-    //           fontFamily: Manrope.SemiBold,
-    //         }}>
-    //         Goods Type
-    //       </Text>
-    //       <View style={styles.action}>
-    //         <FontAwesome
-    //           style={styles.icon}
-    //           name="dropbox"
-    //           color={'#828282'}
-    //           size={20}
-    //         />
-    //         <Select
-    //           selectedIndex={goodIndex}
-    //           value={goodValue}
-    //           style={{backgroundColor: '#fff', paddingLeft: 20, width: '80%'}}
-    //           onSelect={index => {
-    //             setgoodValue(goodType[index.row].goodsname);
-    //             setgoodIndex(index);
-    //           }}>
-    //           {loadgoods()}
-    //         </Select>
-    //       </View>
-    //     </View>
-    //     <View style={{marginVertical: 10}}>
-    //       <Text
-    //         style={{
-    //           fontSize: 16,
-    //           color: Color.lightBlack,
-    //           fontFamily: Manrope.SemiBold,
-    //         }}>
-    //         Fare Type
-    //       </Text>
-    //       <View style={styles.action}>
-    //         <FontAwesome
-    //           style={styles.icon}
-    //           name="object-group"
-    //           color={'#828282'}
-    //           size={20}
-    //         />
-    //         <Select
-    //           selectedIndex={tripIndex}
-    //           value={tripValue}
-    //           style={{backgroundColor: '#fff', paddingLeft: 20, width: '80%'}}
-    //           onSelect={index => {
-    //             settripValue(tripType[index.row].name);
-    //             settripTypeid(tripType[index.row].id);
-    //             settripIndex(index);
-    //           }}>
-    //           {loadtrips()}
-    //         </Select>
-    //       </View>
-    //     </View>
-
-    //     {tripValue == 'Package Fare' ? (
-    //       <View>
-    //         <Text
-    //           style={{
-    //             fontSize: 16,
-    //             color: Color.lightBlack,
-    //             fontFamily: Manrope.SemiBold,
-    //           }}>
-    //           Package Fare Type
-    //         </Text>
-    //         <View style={styles.action}>
-    //           <FontAwesome
-    //             style={styles.icon}
-    //             name="clock-o"
-    //             color={'#828282'}
-    //             size={20}
-    //           />
-    //           <Select
-    //             selectedIndex={packageIndex}
-    //             value={Packagevalue}
-    //             style={{
-    //               backgroundColor: '#fff',
-    //               borderColor: '#fff',
-    //               paddingLeft: 20,
-    //               width: '80%',
-    //             }}
-    //             onSelect={index => {
-    //               setPackagevalue(packageType[index.row].basefare);
-    //               setPackageselcted(packageType[index.row]);
-    //               setpackageID(packageType[index.row].id);
-    //               setpackageIndex(index);
-    //             }}>
-    //             {loadpackage()}
-    //           </Select>
-    //         </View>
-    //       </View>
-    //     ) : null}
-
-    //     {tripValue == 'Intercity Fare' ? (
-    //       <View>
-    //         <Text
-    //           style={{
-    //             fontSize: 16,
-    //             color: Color.lightBlack,
-    //             fontFamily: Manrope.SemiBold,
-    //           }}>
-    //           Intercity Fare Type
-    //         </Text>
-    //         <View style={styles.action}>
-    //           <FontAwesome
-    //             style={styles.icon}
-    //             name="clock-o"
-    //             color={'#828282'}
-    //             size={20}
-    //           />
-    //           <Select
-    //             selectedIndex={interCityIndex}
-    //             value={intercityvalue}
-    //             style={{
-    //               backgroundColor: '#fff',
-    //               borderColor: '#fff',
-    //               paddingLeft: 20,
-    //               width: '80%',
-    //             }}
-    //             onSelect={index => {
-    //               setIntercityValue(intercityType[index.row].basefare);
-    //               setInterCitySelcted(intercityType[index.row]);
-    //               setinterID(intercityType[index.row].id);
-    //               setinterCityIndex(index);
-    //             }}>
-    //             {loadintercity()}
-    //           </Select>
-    //         </View>
-    //       </View>
-    //     ) : null}
-
-    //     {tripValue == 'Night Fare' ? (
-    //       <View>
-    //         <Text
-    //           style={{
-    //             fontSize: 16,
-    //             color: Color.lightBlack,
-    //             fontFamily: Manrope.SemiBold,
-    //           }}>
-    //           Night Fare Type
-    //         </Text>
-    //         <View style={styles.action}>
-    //           <FontAwesome
-    //             style={styles.icon}
-    //             name="clock-o"
-    //             color={'#828282'}
-    //             size={20}
-    //           />
-    //           <Select
-    //             selectedIndex={nightIndex}
-    //             value={nightFareValue}
-    //             style={{
-    //               backgroundColor: '#fff',
-    //               borderColor: '#fff',
-    //               paddingLeft: 20,
-    //               width: '80%',
-    //             }}
-    //             onSelect={index => {
-    //               setNightFareValue(nightFareType[index.row].basefare);
-    //               setNightSelcted(nightFareType[index.row]);
-    //               setnightID(nightFareType[index.row].id);
-    //               setNightIndex(index);
-    //             }}>
-    //             {loadnight()}
-    //           </Select>
-    //         </View>
-    //       </View>
-    //     ) : null}
-
-    //     <View style={{marginVertical: 5}}>
-    //       <Text
-    //         style={{
-    //           fontSize: 16,
-    //           color: Color.lightBlack,
-    //           fontFamily: Manrope.SemiBold,
-    //         }}>
-    //         No. Of Trips
-    //       </Text>
-    //       <View style={styles.action}>
-    //         <FontAwesome
-    //           style={styles.icon}
-    //           name="dropbox"
-    //           color={'#828282'}
-    //           size={20}
-    //         />
-    //         <Select
-    //           selectedIndex={countindex}
-    //           value={countvalue}
-    //           style={{backgroundColor: '#fff', paddingLeft: 20, width: '80%'}}
-    //           onSelect={index => {
-    //             console.log(index);
-
-    //             var count = index.row + 1;
-    //             setcountValue(count);
-    //             setcountindex(index.row);
-    //           }}>
-    //           <SelectItem title={<Text>1 </Text>} />
-    //           <SelectItem title={<Text>2 </Text>} />
-    //           <SelectItem title={<Text>3 </Text>} />
-    //           <SelectItem title={<Text>4</Text>} />
-    //           <SelectItem title={<Text>5 </Text>} />
-    //         </Select>
-    //       </View>
-    //     </View>
-
-    //     <View style={styles.numberHeader}>
-    //       <Text style={styles.alterNumber}>Alternative Mobile Number </Text>
-    //       {/* <Text style={styles.optional}>(optional)</Text> */}
-    //     </View>
-    //     <View style={styles.numberView}>
-    //       <Text style={styles.numberText}>+91</Text>
-    //       <TextInput
-    //         style={styles.numberInput}
-    //         placeholder="Alternative Mobile Number....."
-    //         placeholderTextColor={Color.black3}
-    //         keyboardType="phone-pad"
-    //         value={atlerNumber}
-    //         onChangeText={text => setAlterNUmber(text)}
-    //         maxLength={10}
-    //       />
-    //     </View>
-
-    //     <View style={styles.button}>
-    //       <TouchableOpacity
-    //         style={styles.signIn}
-    //         onPress={() => {
-    //           BookingPreview();
-    //         }}>
-    //         <LinearGradient
-    //           colors={['#85388d', '#85388d']}
-    //           style={styles.signIn}>
-    //           <Text
-    //             style={[
-    //               styles.textSign,
-    //               {
-    //                 color: '#fff',
-    //               },
-    //             ]}>
-    //             Continue
-    //           </Text>
-    //         </LinearGradient>
-    //       </TouchableOpacity>
-    //     </View>
-    //   </View>
-    // </ScrollView>
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <ScrollView
         style={{
           flex: 1,
@@ -1336,10 +849,10 @@ const HomeScreen = ({navigation, route}) => {
           backgroundColor: '#D4D3D3',
           marginTop: 3,
         }}>
-        <View style={{flex: 1}}>
-          <View style={{flex: 1, gap: 10}}>
-            <View style={{gap: 10}}>
-              <View style={{marginTop: 25, marginBottom: 16}}>
+        <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, gap: 10 }}>
+            <View style={{ gap: 10 }}>
+              <View style={{ marginTop: 25, marginBottom: 16 }}>
                 <Text
                   style={{
                     fontSize: 19,
@@ -1367,10 +880,10 @@ const HomeScreen = ({navigation, route}) => {
                       }}
                       onPress={() => {
                         setvehicleselected(data?.item);
-                        setSelectedFareType({"_id": "5e9070ebfe84eb22b4243818", "id": "1", "name": "Meter Fare"});
+                        setSelectedFareType({ "_id": "5e9070ebfe84eb22b4243818", "id": "1", "name": "Meter Fare" });
                       }}>
                       <Image
-                        source={{uri: data?.item?.url}}
+                        source={{ uri: data?.item?.url }}
                         style={{
                           height: 43,
                           width: 76,
@@ -1418,7 +931,7 @@ const HomeScreen = ({navigation, route}) => {
                     fontFamily: Manrope.Medium,
                     textTransform: 'capitalize',
                   }}>
-                  Vehicle Type : {}
+                  Vehicle Type : { }
                 </Text>
                 <TouchableOpacity
                   onPress={() => {
@@ -1444,39 +957,20 @@ const HomeScreen = ({navigation, route}) => {
                     iconname={'down'}
                     icon_size={20}
                     icon_color={Color.black}
-                  /> 
+                  />
                 </TouchableOpacity>
               </View>
             </View>
           </View>
-          {/* <View
-            style={{
-              borderBottomWidth: 1,
-              borderColor: Color.grey,
-              marginTop: 20,
-              marginBottom: 20,
-              height: 1,
-            }}></View> */}
-          <View style={{gap: 10}}>
-            <View style={{marginTop: 10}}>
+          <View style={{ gap: 10 }}>
+            <View style={{ marginTop: 10 }}>
               {route?.params == undefined ? (
                 <View>
                   <View
                     style={{
-                      // flexDirection: 'row',
-                      // alignItems: 'center',
                       gap: 10,
                     }}>
-                    <View style={{gap: 35}}>
-                      {/* <Text
-                        style={{
-                          fontSize: 14,
-                          color: Color.black,
-                          fontFamily: Manrope.Medium,
-                          textTransform: 'capitalize',
-                        }}>
-                        Pickup Location :
-                      </Text> */}
+                    <View style={{ gap: 35 }}>
                       <Text
                         style={{
                           fontSize: 18,
@@ -1484,29 +978,26 @@ const HomeScreen = ({navigation, route}) => {
                           fontFamily: Manrope.Medium,
                           textTransform: 'capitalize',
                         }}>
-                         Pickup & Drop Location :
+                        Pickup & Drop Location :
                       </Text>
                     </View>
                     <TouchableOpacity
                       style={{
-                        backgroundColor:Color?.primary,
-                // width: '50%',
-
-                justifyContent: 'center',
-                // justifyContent: 'center',
-                alignItems: 'center',
-                padding: 15,
-                borderRadius: 30,
-                flexDirection: 'row',
-                gap: 20,
+                        backgroundColor: Color?.primary,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: 15,
+                        borderRadius: 30,
+                        flexDirection: 'row',
+                        gap: 20,
                       }}
                       onPress={() => navigation.navigate('Map_screen')}>
-                           <Iconviewcomponent
-                Icontag={'FontAwesome6'}
-                iconname={'location-dot'}
-                icon_size={20}
-                icon_color={Color.white}
-              />
+                      <Iconviewcomponent
+                        Icontag={'FontAwesome6'}
+                        iconname={'location-dot'}
+                        icon_size={20}
+                        icon_color={Color.white}
+                      />
                       <Text
                         style={{
                           color: Color.white,
@@ -1517,17 +1008,11 @@ const HomeScreen = ({navigation, route}) => {
                         }}>
                         Choose Location
                       </Text>
-                      {/* <Iconviewcomponent
-                        Icontag={'FontAwesome6'}
-                        iconname={'location-dot'}
-                        icon_size={16}
-                        icon_color={Color.white}
-                      /> */}
                     </TouchableOpacity>
                   </View>
                 </View>
               ) : (
-                <View style={{gap: 10}}>
+                <View style={{ gap: 10 }}>
                   <View
                     style={{
                       gap: 10,
@@ -1543,22 +1028,21 @@ const HomeScreen = ({navigation, route}) => {
                         Pickup Location :
                       </Text>
                     </View>
-                    <View style={{backgroundColor: '#EEEEEE',
-                // width: '50%',
-
-                justifyContent: 'center',
-                // justifyContent: 'center',
-                alignItems: 'center',
-                padding: 15,
-                borderRadius: 30,
-                flexDirection: 'row',
-                gap: 20}}>
-                  <Iconviewcomponent
-                Icontag={'FontAwesome6'}
-                iconname={'location-dot'}
-                icon_size={20}
-                icon_color={Color.black}
-              />
+                    <View style={{
+                      backgroundColor: '#EEEEEE',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: 15,
+                      borderRadius: 30,
+                      flexDirection: 'row',
+                      gap: 20
+                    }}>
+                      <Iconviewcomponent
+                        Icontag={'FontAwesome6'}
+                        iconname={'location-dot'}
+                        icon_size={20}
+                        icon_color={Color.black}
+                      />
                       <Text
                         style={{
                           fontSize: 16,
@@ -1568,28 +1052,17 @@ const HomeScreen = ({navigation, route}) => {
                           width: width / 1.45,
                         }}
                         numberOfLines={1}
-                        onPress={()=>{
+                        onPress={() => {
                           navigation.navigate('Map_screen');
                         }}
-                        >
+                      >
                         {route.params?.data?.pickup?.Address}
                       </Text>
-                      {/* <TouchableOpacity
-                        style={{padding: 5}}
-                        onPress={() => { 
-                          navigation.navigate('Map_screen'); 
-                        }}>
-                        <Text style={{color: Color.primary, fontSize: 14}}>
-                          Edit
-                        </Text>
-                      </TouchableOpacity> */}
                     </View>
                   </View>
                   <View
                     style={{
-                      // flexDirection: 'row',
                       gap: 10,
-                      // alignItems: 'center',
                     }}>
                     <View>
                       <Text
@@ -1602,22 +1075,21 @@ const HomeScreen = ({navigation, route}) => {
                         Drop Location :
                       </Text>
                     </View>
-                    <View style={{backgroundColor: '#EEEEEE',
-                // width: '50%',
-
-                justifyContent: 'center',
-                // justifyContent: 'center',
-                alignItems: 'center',
-                padding: 15,
-                borderRadius: 30,
-                flexDirection: 'row',
-                gap: 20,}}>
-                     <Iconviewcomponent
-                Icontag={'FontAwesome6'}
-                iconname={'location-dot'}
-                icon_size={20}
-                icon_color={Color.black}
-              />
+                    <View style={{
+                      backgroundColor: '#EEEEEE',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: 15,
+                      borderRadius: 30,
+                      flexDirection: 'row',
+                      gap: 20,
+                    }}>
+                      <Iconviewcomponent
+                        Icontag={'FontAwesome6'}
+                        iconname={'location-dot'}
+                        icon_size={20}
+                        icon_color={Color.black}
+                      />
                       <Text
                         style={{
                           fontSize: 16,
@@ -1626,21 +1098,12 @@ const HomeScreen = ({navigation, route}) => {
                           textTransform: 'capitalize',
                           width: width / 1.45,
                         }}
-                        onPress={()=>{
+                        onPress={() => {
                           navigation.navigate('Map_screen');
                         }}
                         numberOfLines={1}>
                         {route.params?.data?.drop?.Address}
                       </Text>
-                      {/* <TouchableOpacity
-                        style={{padding: 5}}
-                        onPress={() => {
-                          navigation.navigate('Map_screen');
-                        }}>
-                        <Text style={{color: Color.primary, fontSize: 14}}>
-                          Edit
-                        </Text>
-                      </TouchableOpacity> */}
                     </View>
                   </View>
                 </View>
@@ -1666,10 +1129,7 @@ const HomeScreen = ({navigation, route}) => {
             <TouchableOpacity
               style={{
                 backgroundColor: '#EEEEEE',
-                // width: '50%',
-
                 justifyContent: 'center',
-                // justifyContent: 'center',
                 alignItems: 'center',
                 padding: 15,
                 borderRadius: 30,
@@ -1712,75 +1172,10 @@ const HomeScreen = ({navigation, route}) => {
                 />
               )}
             </TouchableOpacity>
-            {/* <View style={{gap: 10, marginTop: 10}}>
-              <View style={{flexDirection: 'row', gap: 10}}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: Color.black, 
-                    fontFamily: Manrope.SemiBold,
-                    textTransform: 'capitalize',
-                  }}>
-                  Pickup Location :
-                </Text>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: Color?.purple,
-                    padding: 5,
-                    borderRadius: 5,
-                  }}
-                  onPress={() => {
-                    console.log('eeeeee'), navigation.navigate('Map_screen');
-                  }}>
-                  <Text
-                    style={{
-                      color: Color.white,
-                      fontFamily: Manrope.SemiBold,
-                      textTransform: 'capitalize',
-                    }}>
-                    location
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <View style={{flexDirection: 'row', gap: 10}}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: Color.black,
-                    fontFamily: Manrope.SemiBold,
-                    textTransform: 'capitalize',
-                  }}>
-                  Drop Location :
-                </Text>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: Color?.purple,
-                    padding: 5,
-                    borderRadius: 5,
-                  }}>
-                  <Text
-                    style={{
-                      color: Color.white,
-                      fontFamily: Manrope.SemiBold,
-                      textTransform: 'capitalize',
-                    }}>
-                    location
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View> */}
           </View>
-          {/* <View
-            style={{
-              borderBottomWidth: 1,
-              borderColor: Color.grey,
-              marginTop: 20,
-              marginBottom: 20,
-              height: 1,
-            }}></View> */}
-          <View style={{gap: 15, marginTop: 15}}>
-            <View style={{gap: 10}}>
-              <View style={{width: width / 2.7}}>
+          <View style={{ gap: 15, marginTop: 15 }}>
+            <View style={{ gap: 10 }}>
+              <View style={{ width: width / 2.7 }}>
                 <Text
                   style={{
                     fontSize: 18,
@@ -1799,9 +1194,7 @@ const HomeScreen = ({navigation, route}) => {
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 20,
-                  // borderWidth: 0.5,
                   backgroundColor: '#EEEEEE',
-                  // borderColor: Color?.black,
                   borderRadius: 30,
                   padding: 5,
                   justifyContent: 'center',
@@ -1840,8 +1233,8 @@ const HomeScreen = ({navigation, route}) => {
                 </View>
               </TouchableOpacity>
             </View>
-            <View style={{gap: 10}}>
-              <View style={{width: width / 2.7}}>
+            <View style={{ gap: 10 }}>
+              <View style={{ width: width / 2.7 }}>
                 <Text
                   style={{
                     fontSize: 18,
@@ -1849,33 +1242,27 @@ const HomeScreen = ({navigation, route}) => {
                     fontFamily: Manrope.Medium,
                     textTransform: 'capitalize',
                   }}>
-                  Fare Type : 
+                  Fare Type :
                 </Text>
               </View>
               <TouchableOpacity
                 onPress={() => {
+                  console.log("1111111111111111111111");
+                  route?.params?.Distance.distance > 25 ? null :
                   refRBSheetFareType?.current?.open();
                 }}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 20,
-                  // borderWidth: 0.5,
                   backgroundColor: '#EEEEEE',
-                  // borderColor: Color?.black,
                   borderRadius: 30,
                   padding: 5,
                   justifyContent: 'center',
                 }}>
-                {/* <Iconviewcomponent
-                  Icontag={'AntDesign'}
-                  iconname={'dropbox'}
-                  icon_size={20}
-                  icon_color={Color.black}
-                /> */}
                 <Image
                   source={require('../assets/light.png')}
-                  style={{height: 30, width: 30}}
+                  style={{ height: 30, width: 30 }}
                 />
                 <View
                   style={{
@@ -1894,7 +1281,8 @@ const HomeScreen = ({navigation, route}) => {
                       fontFamily: Manrope.Regular,
                       textTransform: 'capitalize',
                     }}>
-                    {selectedfareType?.name}
+                    {/* {selectedfareType?.name} */}
+                    {`${route?.params?.Distance.distance > 25 ? "Intercity Fare" : selectedfareType?.name}`}
                   </Text>
                   <Iconviewcomponent
                     Icontag={'AntDesign'}
@@ -1905,9 +1293,82 @@ const HomeScreen = ({navigation, route}) => {
                 </View>
               </TouchableOpacity>
             </View>
-            {selectedfareType?.name !== 'Meter Fare' ? (
-              <View style={{gap: 10}}>
-                <View style={{width: width / 2.7}}>
+
+            {selectedfareType?.name !== 'Meter Fare' && selectedfareType?.name !== "Intercity Fare" ? (
+              route?.params?.Distance.distance > 25 ?
+                null :
+                <View style={{ gap: 10 }}>
+                  <View style={{ width: width / 2.7 }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        color: Color.black,
+                        fontFamily: Manrope.Medium,
+                        textTransform: 'capitalize',
+                      }}>
+                      {selectedfareType?.name} :
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      refRBSheetVehicleFare?.current?.open();
+                    }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 20,
+                      backgroundColor: '#EEEEEE',
+                      borderRadius: 30,
+                      padding: 5,
+                      justifyContent: 'center',
+                    }}>
+                    <Iconviewcomponent
+                      Icontag={'AntDesign'}
+                      iconname={'dropbox'}
+                      icon_size={20}
+                      icon_color={Color.black}
+                    />
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderWidth: 1,
+                        borderColor: Color?.grey,
+                        padding: 10,
+                        width: width / 1.45,
+                      }}>
+                      {console.log("fffff", selectedFarevalue)
+                      }
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: Color.black,
+                          fontFamily: Manrope.Regular,
+                          textTransform: 'capitalize',
+                        }}>
+                        {isfarepac == true ? `${selectedFarevalue?.baseminute} -->  ${selectedFarevalue?.basekm} KM --> ₹${selectedFarevalue?.basefare}` : "select fare"}
+                      </Text>
+                      <Iconviewcomponent
+                        Icontag={'AntDesign'}
+                        iconname={'down'}
+                        icon_size={15}
+                        icon_color={Color.black}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+            ) :
+              null
+            }
+
+
+
+
+            {selectedfareType?.name == 'Intercity Fare' || route?.params?.Distance.distance > 25 ? (
+              <View style={{ gap: 10 }}>
+                <View style={{ width: width / 2.7 }}>
                   <Text
                     style={{
                       fontSize: 18,
@@ -1915,20 +1376,15 @@ const HomeScreen = ({navigation, route}) => {
                       fontFamily: Manrope.Medium,
                       textTransform: 'capitalize',
                     }}>
-                    {selectedfareType?.name} :
+                    Intercity Fare :
                   </Text>
                 </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    refRBSheetVehicleFare?.current?.open();
-                  }}
+                <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 20,
-                    // borderWidth: 0.5,
                     backgroundColor: '#EEEEEE',
-                    // borderColor: Color?.black,
                     borderRadius: 30,
                     padding: 5,
                     justifyContent: 'center',
@@ -1949,17 +1405,15 @@ const HomeScreen = ({navigation, route}) => {
                       padding: 10,
                       width: width / 1.45,
                     }}>
-                    {console.log("fffff",selectedFarevalue)
-                    }
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: Color.black,
-                        fontFamily: Manrope.Regular,
-                        textTransform: 'capitalize',
-                      }}>
-                    { isfarepac == true ? `${selectedFarevalue?.baseminute} -->  ${selectedFarevalue?.basekm} KM --> ₹${selectedFarevalue?.basefare}`: "select fare"}
-                    </Text>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          color: Color.black,
+                          fontFamily: Manrope.Regular,
+                          textTransform: 'capitalize',
+                        }}>
+                        {`${intercitydata?.baseminute} -->  ${intercitydata?.basekm} KM --> ₹${intercitydata?.basefare}`}
+                      </Text>
                     <Iconviewcomponent
                       Icontag={'AntDesign'}
                       iconname={'down'}
@@ -1967,9 +1421,14 @@ const HomeScreen = ({navigation, route}) => {
                       icon_color={Color.black}
                     />
                   </View>
-                </TouchableOpacity>
+                </View>
               </View>
-            ) : null}
+            ) :
+              null
+            }
+
+
+
             {/* <View style={{gap:10}}>
             <View style={{width:width/2.7}}>
               <Text
@@ -2056,8 +1515,8 @@ const HomeScreen = ({navigation, route}) => {
                 </TouchableOpacity>
               </View>
             ) : null} */}
-            <View style={{gap: 10}}>
-              <View style={{width: width / 2.7}}>
+            <View style={{ gap: 10 }}>
+              <View style={{ width: width / 2.7 }}>
                 <Text
                   style={{
                     fontSize: 18,
@@ -2160,7 +1619,7 @@ const HomeScreen = ({navigation, route}) => {
                 />
               </TouchableOpacity>
             </View> */}
-            <View style={{gap: 10}}>
+            <View style={{ gap: 10 }}>
               <Text
                 style={{
                   fontSize: 16,
@@ -2169,7 +1628,7 @@ const HomeScreen = ({navigation, route}) => {
                   textTransform: 'capitalize',
                 }}>
                 Alternative Mobile Number{' '}
-                <Text style={{color: '#888888'}}>{`( optional ) `}</Text>
+                <Text style={{ color: '#888888' }}>{`( optional ) `}</Text>
               </Text>
               <View
                 style={{
@@ -2224,7 +1683,7 @@ const HomeScreen = ({navigation, route}) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{margin: 20, gap: 10}}>
+          <View style={{ margin: 20, gap: 10 }}>
             <View
               style={{
                 justifyContent: 'center',
@@ -2241,7 +1700,7 @@ const HomeScreen = ({navigation, route}) => {
                 Select Vehicle Type
               </Text>
             </View>
-            <ScrollView style={{marginBottom: 35}}>
+            <ScrollView style={{ marginBottom: 35 }}>
               {vehicleType?.map((item, index) => {
                 const Selected = selectedVehicletype?.id === item?.id;
 
@@ -2288,7 +1747,7 @@ const HomeScreen = ({navigation, route}) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{margin: 20, gap: 10}}>
+          <View style={{ margin: 20, gap: 10 }}>
             <View
               style={{
                 justifyContent: 'center',
@@ -2305,7 +1764,7 @@ const HomeScreen = ({navigation, route}) => {
                 Select Goods Type
               </Text>
             </View>
-            <ScrollView style={{marginBottom: 35}}>
+            <ScrollView style={{ marginBottom: 35 }}>
               {goodType?.map((item, index) => {
                 const Selected = selectedGoodsType?.goodsid === item?.goodsid;
 
@@ -2352,7 +1811,7 @@ const HomeScreen = ({navigation, route}) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{margin: 20, gap: 10}}>
+          <View style={{ margin: 20, gap: 10 }}>
             <View
               style={{
                 justifyContent: 'center',
@@ -2369,28 +1828,26 @@ const HomeScreen = ({navigation, route}) => {
                 Select Fare Type
               </Text>
             </View>
-            <ScrollView style={{marginBottom: 35}}>
+            <ScrollView style={{ marginBottom: 35 }}>
               {tripType?.map((item, index) => {
                 const Selected = selectedfareType?.name === item?.name;
-
+                console.log("item ------------------ :", JSON.stringify(item) + " distance *********" + route.params?.Distance.distance);
                 return (
                   <TouchableOpacity
                     onPress={() => {
+                      console.log("utejkbnvcjkdv",item);    
                       setisfarepac(false);
                       selectedFaretype(item);
                       setSelectedFareType(item);
-                      if(item?.name == "Night Fare")
-                      {
+                      if (item?.name == "Night Fare") {
                         settripTypeid(4)
-                      }else{
-                        if(item?.name == "Package Fare")
-                        {
+                      } else {
+                        if (item?.name == "Package Fare") {
                           settripTypeid(2)
-                        }else{
-                          if(item?.name == "Intercity Fare")
-                          {
+                        } else {
+                          if (item?.name == "Intercity Fare") {
                             settripTypeid(3)
-                          }else{
+                          } else {
                             settripTypeid(1)
                           }
                         }
@@ -2434,7 +1891,7 @@ const HomeScreen = ({navigation, route}) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{margin: 20, gap: 10}}>
+          <View style={{ margin: 20, gap: 10 }}>
             <View
               style={{
                 justifyContent: 'center',
@@ -2451,7 +1908,7 @@ const HomeScreen = ({navigation, route}) => {
                 Select Vehicles
               </Text>
             </View>
-            <ScrollView style={{marginBottom: 35}}>
+            <ScrollView style={{ marginBottom: 35 }}>
               {Tripcount?.map((item, index) => {
                 const Selected = selectedtripcount?.count === item?.count;
 
@@ -2489,7 +1946,8 @@ const HomeScreen = ({navigation, route}) => {
           ref={refRBSheetVehicleFare}
           closeOnDragDown={true}
           closeOnPressMask={true}
-          height={selectedfareType?.name !== 'Intercity Fare' ? 300 : 700}
+          height={300}
+          // height={selectedfareType?.name !== 'Intercity Fare' ? 300 : 700}
           customStyles={{
             wrapper: {
               backgroundColor: '#00000088',
@@ -2498,7 +1956,7 @@ const HomeScreen = ({navigation, route}) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{margin: 20, gap: 10}}>
+          <View style={{ margin: 20, gap: 10 }}>
             <View
               style={{
                 justifyContent: 'center',
@@ -2515,12 +1973,14 @@ const HomeScreen = ({navigation, route}) => {
                 {selectedfareType?.name}
               </Text>
             </View>
-            <ScrollView style={{marginBottom: 35}}>
+            <ScrollView style={{ marginBottom: 35 }}>
               {Farevalue?.map((item, index) => {
                 const Selected = selectedFarevalue === item;
                 return (
                   <TouchableOpacity
                     onPress={() => {
+                      console.log("Selected item ****************** ", item);
+
                       setselectedFarevalue(item);
                       setisfarepac(true);
                       refRBSheetVehicleFare?.current?.close();
@@ -2559,13 +2019,12 @@ const HomeScreen = ({navigation, route}) => {
             gap: 5,
           }}
           onPress={() => {
-            if(isfarepac == false && selectedfareType?.name !== 'Meter Fare')
-            {
+            if (isfarepac == false && selectedfareType?.name !== 'Meter Fare') {
               ToastAndroid.show(
                 'Please Select All Mandatory Fields',
                 ToastAndroid.SHORT,
               );
-            }else{
+            } else {
               booking();
             }
           }}>
@@ -2582,7 +2041,7 @@ const HomeScreen = ({navigation, route}) => {
             Icontag={'FontAwesome'}
             iconname={'arrow-circle-right'}
             icon_size={20}
-            iconstyle={{color: Color.white}}
+            iconstyle={{ color: Color.white }}
           />
         </TouchableOpacity>
         {/* <TouchableOpacity
@@ -2754,7 +2213,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 2,
   },
-  text: {color: 'white', fontWeight: 'bold'},
+  text: { color: 'white', fontWeight: 'bold' },
   locationView: {
     width: '95%',
     flexDirection: 'row',
@@ -2774,7 +2233,7 @@ const styles = StyleSheet.create({
     gap: height * 0.01,
   },
   locationText: {
-    width: width * 0.5,
+    width: width * 0.5, 
     // maxHeight: height * 0.05,
     color: Color.black,
     gap: height * 0.03,

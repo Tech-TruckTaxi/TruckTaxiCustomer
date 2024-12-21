@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,21 +17,21 @@ import {
 import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {useTheme} from '@react-navigation/native';
-import {AuthContext} from '../context/context';
-import {P, H5, H4, H2, H6, H3} from '../components/typography';
+import { useTheme } from '@react-navigation/native';
+import { AuthContext } from '../context/context';
+import { P, H5, H4, H2, H6, H3 } from '../components/typography';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const VerifyOtp = ({navigation, route}) => {
+const VerifyOtp = ({ navigation, route }) => {
   const [value, setValue] = useState('');
   const [formattedValue, setFormattedValue] = useState('');
   const [valid, setValid] = useState(true);
   const phoneInput = useRef();
-  const {signIn} = React.useContext(AuthContext);
+  const { signIn } = React.useContext(AuthContext);
   const [load, setload] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [code, setCode] = useState('');
-  const {phnumber} = route.params;
+  const { phnumber } = route.params;
 
   const [data, setData] = React.useState({
     username: '',
@@ -43,7 +43,7 @@ const VerifyOtp = ({navigation, route}) => {
   });
 
   async function loginHandle(formattedValue) {
-    console.log(formattedValue);
+    console.log("Login Handler -----------------------", formattedValue);
     setload(true);
 
     var myHeaders = new Headers();
@@ -64,6 +64,8 @@ const VerifyOtp = ({navigation, route}) => {
     fetch('https://trucktaxi.co.in/api/customer/verifyOTP', requestOptions)
       .then(response => response.json())
       .then(result => {
+        console.log("RESULT ------------ ",result);
+        
         if (result.status == 200) {
           if (result.newuser) {
             navigation.navigate('completeprofile', {
@@ -83,11 +85,13 @@ const VerifyOtp = ({navigation, route}) => {
 
             fetch(
               'https://trucktaxi.co.in/api/customer/getprofiledetails?mobileno=' +
-                phnumber,
+              phnumber,
               requestOptions,
             )
               .then(response => response.json())
               .then(data => {
+                console.log("GET PROFILE DATA --------------- :",data);
+                
                 AsyncStorage.setItem('user', phnumber);
                 AsyncStorage.setItem('userdata', JSON.stringify(data.data[0]));
                 signIn(result);
@@ -99,7 +103,7 @@ const VerifyOtp = ({navigation, route}) => {
           alert('Invalid OTP');
           setload(false);
         }
-        console.log(result);
+        console.log("*****************",result);
       })
       .catch(error => console.log('error', error));
   }
@@ -122,7 +126,7 @@ const VerifyOtp = ({navigation, route}) => {
 
   if (load) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
@@ -145,7 +149,7 @@ const VerifyOtp = ({navigation, route}) => {
         </View>
 
         <Animatable.View style={[styles.footer]} animation="fadeInUpBig">
-          <View style={{flex: 1, flexDirection: 'row', marginLeft: 24}}>
+          <View style={{ flex: 1, flexDirection: 'row', marginLeft: 24 }}>
             <View style={styles.action}>
               <TextInput
                 placeholder="Enter OTP"
@@ -183,7 +187,7 @@ const VerifyOtp = ({navigation, route}) => {
 
   if (load) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -192,7 +196,7 @@ const VerifyOtp = ({navigation, route}) => {
 
 export default VerifyOtp;
 
-const {height} = Dimensions.get('screen');
+const { height } = Dimensions.get('screen');
 const height_logo = height * 0.28;
 const height_logot = height * 0.18;
 

@@ -18,44 +18,44 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   selectDestination,
   selectOrigin,
   setTravelTimeInformation,
 } from '../slices/navSlice';
-import {P, H5, H4, H2, H6, H3} from '../components/typography';
+import { P, H5, H4, H2, H6, H3 } from '../components/typography';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
-import {Button} from '@ui-kitten/components';
+import { Button } from '@ui-kitten/components';
 import Snackbar from 'react-native-snackbar';
 import Color from '../Global/Color';
-import {Manrope} from '../Global/FontFamily';
+import { Manrope } from '../Global/FontFamily';
 import moment from 'moment';
-const {width, height} = Dimensions.get('screen');
-const OfferScreen = ({navigation, route}) => {
+const { width, height } = Dimensions.get('screen');
+const OfferScreen = ({ navigation, route }) => {
   const origin = useSelector(selectOrigin);
   const destination = useSelector(selectDestination);
- console.log("XXXXXXXXXXXXXXXXXXXXXXX")
- console.log(route?.params,"sssss")
- console.log("XXXXXXXXXXXXXXXXXXXXXXX")
-  const {selectedvehcilelist} = route.params;
-  const {location} = route.params;
-  const {tripValue} = route.params;
-  const {goodValue} = route.params;
-  const {Packagevalue} = route.params;
-  const {nightFareType} = route.params;
-  const {datetosend} = route.params;
-  const {time} = route.params;
-  const {tripcount} = route.params;
-  const {tripTypeid} = route.params;
-  const {packageid} = route.params;
-  const {interID} = route.params;
-  const {nightID} = route.params;
-  const {alternativemobno} = route.params;
-  const {Distance} = route.params;
-  const {intercityselcted} = route.params;
+  console.log("XXXXXXXXXXXXXXXXXXXXXXX")
+  console.log(route?.params, "sssss")
+  console.log("XXXXXXXXXXXXXXXXXXXXXXX")
+  const { selectedvehcilelist } = route.params;
+  const { location } = route.params;
+  const { tripValue } = route.params;
+  const { goodValue } = route.params;
+  const { Packagevalue } = route.params;
+  const { nightFareType } = route.params;
+  const { datetosend } = route.params;
+  const { time } = route.params;
+  const { tripcount } = route.params;
+  const { tripTypeid } = route.params;
+  const { packageid } = route.params;
+  const { interID } = route.params;
+  const { nightID } = route.params;
+  const { alternativemobno } = route.params;
+  const { Distance } = route.params;
+  const { intercityselcted } = route.params;
 
   const [showLoading, setshowLoading] = useState(false);
   const [amount, setamount] = useState('');
@@ -69,12 +69,26 @@ const OfferScreen = ({navigation, route}) => {
   const [interfare, setinterfare] = useState('');
 
   useEffect(() => {
+    console.log("************WELCOME ***************");
+    reload();
+  }, [
+    tripValue,
+    Packagevalue,
+    selectedvehcilelist,
+    tripcount,
+    datetosend,
+    origin,
+    destination,
+    nightFareType,
+  ]);
+
+  useEffect(() => {
     navigation.setOptions({
       title: <Text>Booking Information</Text>,
       headerRight: () => (
-        <View style={{flexDirection: 'row'}}>
+        <View style={{ flexDirection: 'row' }}>
           <FontAwesome
-            style={{padding: 10}}
+            style={{ padding: 10 }}
             onPress={() => {
               home();
             }}
@@ -88,19 +102,7 @@ const OfferScreen = ({navigation, route}) => {
     });
   }, []);
 
-  useEffect(() => {
-    console.log("intercityselcted",intercityselcted);
-    reload();
-  }, [
-    tripValue,
-    Packagevalue,
-    selectedvehcilelist,
-    tripcount,
-    datetosend,
-    origin,
-    destination,
-    nightFareType,
-  ]);
+
 
   // React.useEffect(() => {
 
@@ -122,11 +124,15 @@ const OfferScreen = ({navigation, route}) => {
   };
 
   const reload = () => {
+    console.log("*********************RELOAD*****************");
+
     setshowLoading(true);
     AsyncStorage.getItem('userdata').then(userdata => {
       AsyncStorage.getItem('userToken').then(value => {
         let parseddata = JSON.parse(userdata);
         var myHeaders = new Headers();
+        console.log("TOKEN ===================== :", value);
+
         myHeaders.append('Authorization', 'Bearer ' + value);
         var requestOptions = {
           method: 'GET',
@@ -142,7 +148,6 @@ const OfferScreen = ({navigation, route}) => {
         //   location?.drop?.latitude +
         //   '&tolong=' +
         //   location?.drop?.latitude;
-        // console.log('ffff', url);
 
         // fetch(
         //   'https://trucktaxi.co.in/api/customer/getdistance?fromlat=' +
@@ -157,7 +162,6 @@ const OfferScreen = ({navigation, route}) => {
         // )
         //   .then(response => response.json())
         //   .then(result => {
-        //     console.log('SSSSSSSSS', result);
 
         //     setshowLoading(false);
         //     var distance = parseFloat(result.data[0].distance);
@@ -166,11 +170,11 @@ const OfferScreen = ({navigation, route}) => {
 
           fetch(
             'https://trucktaxi.co.in/api/customer/getmeterfare?distance=' +
-              Distance?.distance +
-              '&cityid=' +
-              parseddata.cityid +
-              '&vehicleid=' +
-              selectedvehcilelist.id,
+            Distance?.distance +
+            '&cityid=' +
+            parseddata.cityid +
+            '&vehicleid=' +
+            selectedvehcilelist.id,
             requestOptions,
           )
             .then(response => response.json())
@@ -181,9 +185,9 @@ const OfferScreen = ({navigation, route}) => {
               setamount(charge);
               fetch(
                 'https://trucktaxi.co.in/api/customer/getadditionalfare?pickuptime=' +
-                  time +
-                  '&fare=' +
-                  charge,
+                time +
+                '&fare=' +
+                charge,
                 requestOptions,
               )
                 .then(response => response.json())
@@ -205,24 +209,23 @@ const OfferScreen = ({navigation, route}) => {
 
           fetch(
             'https://trucktaxi.co.in/api/customer/getfareforpackage?distance=' +
-              Distance?.distance +
-              '&basefare=' +
-              basefare +
-              '&basekm=' +
-              basekm +
-              '&addkmcharge=18',
+            Distance?.distance +
+            '&basefare=' +
+            basefare +
+            '&basekm=' +
+            basekm +
+            '&addkmcharge=18',
             requestOptions,
           )
             .then(response => response.json())
             .then(packagefare => {
-              console.log(packagefare);
               var charge = parseFloat(packagefare.data[0].approximatefare);
               setamount(charge);
               fetch(
                 'https://trucktaxi.co.in/api/customer/getadditionalfare?pickuptime=' +
-                  time +
-                  '&fare=' +
-                  charge,
+                time +
+                '&fare=' +
+                charge,
                 requestOptions,
               )
                 .then(response => response.json())
@@ -238,47 +241,54 @@ const OfferScreen = ({navigation, route}) => {
             });
         } else if (tripValue == 'Intercity Fare') {
           console.log('selectedFarevalue==>Intercity');
-          fetch(
-            'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
-              selectedvehcilelist.id +
-              '&cityid=' +
-              parseddata.cityid,
-            requestOptions,
-          )
-            .then(response => response.json())
-            .then(intercitylist => {
-              console.log('iiiiii', intercitylist.data);
-              var distance = parseFloat(Distance?.distance);
-              var list = [];
-              list = intercitylist.data;
+          // fetch(
+          //   'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
+          //     selectedvehcilelist.id +
+          //     '&cityid=' +
+          //     parseddata.cityid,
+          //   requestOptions,
+          // )
+          //   .then(response => response.json())
+          //   .then(intercitylist => {
 
-              var closest = list.reduce((a, b) => {
-                return Math.abs(b.basekm - distance) <
-                  Math.abs(a.basekm - distance)
-                  ? b
-                  : a;
-              });
-              let intfare =
-                closest.basekm +
-                '-' +
-                closest.basefare +
-                '-' +
-                closest.baseminute;
-              setinterfare(intfare);
-              var charge = parseFloat(closest.basefare);
-              console.log('Intercity ============== :', closest.basefare);
+          fetch('https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' + Distance?.distance + '&vehicletype=' + selectedvehcilelist.id, requestOptions)
+            .then((response) => response.json())
+            .then((result) => {
+
+              var charge = parseFloat(result.data[0].basefare);
+              console.log('Interbase ----------------------', charge);
+
+              // var distance = parseFloat(Distance?.distance);
+              // var list = [];
+              // list = result.data[0];
+
+              // var closest = list.reduce((a, b) => {
+              //   return Math.abs(b.basekm - distance) <
+              //     Math.abs(a.basekm - distance)
+              //     ? b
+              //     : a;
+              // });
+              // let intfare =
+              //   closest.basekm +
+              //   '-' +
+              //   closest.basefare +
+              //   '-' +
+              //   closest.baseminute;
+              // setinterfare(intfare);
+              // var charge = parseFloat(closest.basefare);
+              // console.log('Intercity ============== :', closest.basefare);
               setamount(charge);
 
               fetch(
                 'https://trucktaxi.co.in/api/customer/getadditionalfare?pickuptime=' +
-                  time +
-                  '&fare=' +
-                  charge,
+                time +
+                '&fare=' +
+                charge,
                 requestOptions,
               )
                 .then(response => response.json())
                 .then(additionafate => {
-                  console.log(additionafate);
+                  console.log("intercity add -------", additionafate);
 
                   var addtionalcharges =
                     parseFloat(additionafate.approxmatefare) -
@@ -286,10 +296,6 @@ const OfferScreen = ({navigation, route}) => {
                   var total = addtionalcharges + parseFloat(charge);
                   settotal(total);
                   setpeakfare(addtionalcharges);
-                  console.log(
-                    'Intercity Peak============== :',
-                    addtionalcharges,
-                  );
                 })
                 .catch(error => console.log('error', error));
             });
@@ -298,33 +304,19 @@ const OfferScreen = ({navigation, route}) => {
           var nightbasekm = parseFloat(nightFareType.basekm);
           var nightAddKMCharge = parseFloat(nightFareType.AddKMCharge);
           console.log('nightFareType.basefare', nightFareType.basefare);
-          console.log(
-            `data`,
-            selectedvehcilelist.id +
-              '&cityid=' +
-              parseddata.cityid +
-              '&distance=' +
-              destination?.distance +
-              '&basefare=' +
-              nightbasefare +
-              '&basekm=' +
-              nightbasekm +
-              '&addkmcharge=' +
-              nightAddKMCharge,
-          );
           fetch(
             'https://trucktaxi.co.in/api/customer/getfarefornight?vehicleid=' +
-              selectedvehcilelist.id +
-              '&cityid=' +
-              parseddata.cityid +
-              '&distance=' +
-              destination?.distance +
-              '&basefare=' +
-              nightbasefare +
-              '&basekm=' +
-              nightbasekm +
-              '&addkmcharge=' +
-              nightAddKMCharge,
+            selectedvehcilelist.id +
+            '&cityid=' +
+            parseddata.cityid +
+            '&distance=' +
+            destination?.distance +
+            '&basefare=' +
+            nightbasefare +
+            '&basekm=' +
+            nightbasekm +
+            '&addkmcharge=' +
+            nightAddKMCharge,
             requestOptions,
           )
             .then(response => response.json())
@@ -347,19 +339,19 @@ const OfferScreen = ({navigation, route}) => {
                 closest.baseminute;
               setinterfare(intfare);
               var charge = parseFloat(closest.basefare);
-              console.log('Intercity ============== :', closest.basefare);
+              console.log('NIght ============== :', closest.basefare);
               setamount(charge);
 
               fetch(
                 'https://trucktaxi.co.in/api/customer/getadditionalfare?pickuptime=' +
-                  time +
-                  '&fare=' +
-                  charge,
+                time +
+                '&fare=' +
+                charge,
                 requestOptions,
               )
                 .then(response => response.json())
                 .then(additionafate => {
-                  console.log(additionafate);
+                  console.log("night add", additionafate);
 
                   var addtionalcharges =
                     parseFloat(additionafate.approxmatefare) -
@@ -367,10 +359,6 @@ const OfferScreen = ({navigation, route}) => {
                   var total = addtionalcharges + parseFloat(charge);
                   settotal(total);
                   setpeakfare(addtionalcharges);
-                  console.log(
-                    'Intercity Peak============== :',
-                    addtionalcharges,
-                  );
                 })
                 .catch(error => console.log('error', error));
             });
@@ -421,27 +409,27 @@ const OfferScreen = ({navigation, route}) => {
       alternativemobno: alternativemobno,
       nightFareType: nightFareType,
     });
-  //  const value =  {
-  //     selectedvehcilelist: selectedvehcilelist,
-  //     location: location,
-  //     tripValue: tripValue,
-  //     goodValue: goodValue,
-  //     packageid: packageid,
-  //     interID: interID,
-  //     nightID: nightID,
-  //     Packagevalue: Packagevalue,
-  //     time: time,
-  //     interfare: interfare,
-  //     datetosend: datetosend,
-  //     tripTypeid: tripTypeid,
-  //     tripcount: tripcount,
-  //     peakfare: peakfare,
-  //     total: tripValue == "Intercity Fare" ? intercityselcted?.basefare : total,
-  //     alternativemobno: alternativemobno,
-  //     nightFareType: nightFareType,
-  //   }
-  //   console.log("dddddd",value);
-    
+    //  const value =  {
+    //     selectedvehcilelist: selectedvehcilelist,
+    //     location: location,
+    //     tripValue: tripValue,
+    //     goodValue: goodValue,
+    //     packageid: packageid,
+    //     interID: interID,
+    //     nightID: nightID,
+    //     Packagevalue: Packagevalue,
+    //     time: time,
+    //     interfare: interfare,
+    //     datetosend: datetosend,
+    //     tripTypeid: tripTypeid,
+    //     tripcount: tripcount,
+    //     peakfare: peakfare,
+    //     total: tripValue == "Intercity Fare" ? intercityselcted?.basefare : total,
+    //     alternativemobno: alternativemobno,
+    //     nightFareType: nightFareType,
+    //   }
+    //   console.log("dddddd",value);
+
   };
 
   const couponhandle = () => {
@@ -513,7 +501,7 @@ const OfferScreen = ({navigation, route}) => {
         <View style={styles.container}>
           <View style={styles.boxone}>
             <View
-              style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+              style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text
                 style={{
                   fontSize: 16,
@@ -582,9 +570,9 @@ const OfferScreen = ({navigation, route}) => {
                   fontFamily: Manrope.Bold,
                   marginLeft: 20,
                 }}>
-               {
-                tripValue == "Intercity Fare" ? `Rs ${intercityselcted?.basefare}` : `Rs ${amount}`
-               }
+                {
+                  tripValue == "Intercity Fare" ? `Rs ${intercityselcted?.basefare}` : `Rs ${amount}`
+                }
               </Text>
             </View>
             {/* <View
@@ -635,8 +623,8 @@ const OfferScreen = ({navigation, route}) => {
                   marginLeft: 20,
                 }}>
                 {
-                tripValue == "Intercity Fare" ? `Rs ${intercityselcted?.basefare}` : `Rs ${total}`
-               }
+                  tripValue == "Intercity Fare" ? `Rs ${intercityselcted?.basefare}` : `Rs ${total}`
+                }
               </Text>
             </View>
           </View>
@@ -681,7 +669,7 @@ const OfferScreen = ({navigation, route}) => {
                   marginTop: 10,
                   marginRight: 10,
                 }}>
-                <View style={{backgroundColor: '#fff'}}>
+                <View style={{ backgroundColor: '#fff' }}>
                   <View style={styles.action}>
                     <TextInput
                       placeholder="Enter Coupon Code"
@@ -695,11 +683,11 @@ const OfferScreen = ({navigation, route}) => {
                 </View>
                 <View>
                   <Button
-                    style={{backgroundColor: '#85388d', borderColor: '#DB3239'}}
+                    style={{ backgroundColor: '#85388d', borderColor: '#DB3239' }}
                     onPress={() => {
                       couponhandle();
                     }}>
-                    <Text style={{color: '#fff'}}>Apply</Text>
+                    <Text style={{ color: '#fff' }}>Apply</Text>
                   </Button>
                 </View>
               </View>
@@ -714,7 +702,7 @@ const OfferScreen = ({navigation, route}) => {
               alignItems: 'center',
             }}>
             <View
-              style={{width: '100%', alignItems: 'center', marginVertical: 30}}>
+              style={{ width: '100%', alignItems: 'center', marginVertical: 30 }}>
               <TouchableOpacity
                 style={{
                   width: '100%',
@@ -731,7 +719,7 @@ const OfferScreen = ({navigation, route}) => {
                                     colors={["#85388d", "#85388d"]}
                                     style={styles.signIn}
                                 > */}
-                <Text style={{fontSize: 16, color: Color.white}}>Continue</Text>
+                <Text style={{ fontSize: 16, color: Color.white }}>Continue</Text>
                 {/* </LinearGradient> */}
               </TouchableOpacity>
             </View>
