@@ -1,42 +1,35 @@
 import {
   Alert,
   Dimensions,
-  FlatList,
   Keyboard,
-  KeyboardAvoidingView,
-  Modal,
   PermissionsAndroid,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import Geolocation from '@react-native-community/geolocation';
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
 import {useNavigation} from '@react-navigation/native';
 import Color from '../Global/Color';
 import MapViewDirections from 'react-native-maps-directions';
-import {get} from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 const {width, height} = Dimensions.get('screen');
-import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import {Iconviewcomponent} from '../Global/Icontag';
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 import axios from 'axios';
 import {Manrope} from '../Global/FontFamily';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import {Time} from 'react-native-gifted-chat';
-import {duration} from 'moment';
-const Map_screen = () => {
+import {useFocusEffect} from '@react-navigation/native';
+
+const Map_screen = ({route}) => {
+  const routeparams = route?.params;
   const refRBSheet = useRef();
-
+  const googlePlacesRef = useRef(null);
   const navigation = useNavigation();
-
   const [origin, setOrigin] = useState({
     latitude: 11.0168,
     longitude: 76.9558,
@@ -90,7 +83,42 @@ const Map_screen = () => {
     requestPermission();
   }, []);
 
-  // get Address from latitude and longitude
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen is focused');
+
+      if (!!routeparams) {
+        if (routeparams?.data?.drop) {
+          setLocation(prevLocation => ({
+            ...prevLocation,
+            drop: {
+              latitude: 0,
+              longitude: 0,
+              drop: false,
+              Address: '',
+            },
+          }));
+          console.log('Drop DATA 12345');
+        } else if (routeparams?.data?.pickup) {
+          console.log('Pick UP DATA');
+          setLocation(prevLocation => ({
+            ...prevLocation,
+            pickup: {
+              latitude: 0,
+              longitude: 0,
+              pickup: false,
+              Address: '',
+            },
+          }));
+        }
+      }
+
+      return () => {
+        console.log('Screen is unfocused');
+      };
+    }, [routeparams]),
+  );
+
   const GetAddress = async item => {
     try {
       const apiKey = 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk'; // Replace with your API key
@@ -127,7 +155,6 @@ const Map_screen = () => {
   };
 
   const getCurrentPosition = () => {
-    console.log('vvvvvvvvvvv333333333333');
     Geolocation.getCurrentPosition(info => {
       GetAddress(info?.coords);
     });
@@ -146,16 +173,10 @@ const Map_screen = () => {
             buttonPositive: 'OK',
           },
         );
-        console.log('granted', granted);
-        console.log(
-          'PermissionsAndroid.RESULTS.GRANTED==>',
-          PermissionsAndroid.RESULTS.GRANTED,
-        );
 
         if (granted === 'granted') {
           getCurrentPosition();
         } else {
-          console.log('Location permission denied');
           Alert.alert(
             'Location Disabled',
             'Please enable location services for a better experience',
@@ -176,7 +197,6 @@ const Map_screen = () => {
         console.warn(err);
       }
     } else {
-      // For iOS, location permission is handled differently
       Geolocation.requestAuthorization('whenInUse').then(permission => {
         if (permission === 'granted') {
           getCurrentPosition();
@@ -190,7 +210,7 @@ const Map_screen = () => {
                 text: 'Retry',
                 onPress: () => {
                   if (retry) {
-                    requestPermission(false); // Retry only once on iOS
+                    requestPermission(false);
                   }
                 },
               },
@@ -216,68 +236,133 @@ const Map_screen = () => {
       console.log('catch in confirmlocation ', error);
     }
   };
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
 
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
   return (
     <View style={{flex: 1}}>
-      <View style={{width: width, height: height / 1.9, flex: 1}}>
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          region={origin}
-          showsUserLocation={true}
-          followsUserLocation={true}
-          showsMyLocationButton={true}
-          onPress={e => {
-            GetAddress(e.nativeEvent.coordinate);
+      <View style={{flex: 1}}>
+        <View
+          style={{
+            backgroundColor: Color?.white,
+            height: isKeyboardVisible ? height / 3 : height / 12,
           }}>
-          <Marker
-            draggable
-            coordinate={{
-              latitude: location.pickup?.latitude,
-              longitude: location.pickup?.longitude,
+          <GooglePlacesAutocomplete
+            ref={googlePlacesRef}
+            placeholder="Search"
+            onPress={(data, details = null) => {
+              setSearchlistData({
+                location: data?.description,
+                data: details?.geometry,
+              });
             }}
-            onDragEnd={async e => {
-              console.log('start ======== ', e.nativeEvent.coordinate);
-              try {
-                const apiKey = 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk';
-                const {latitude, longitude} = e.nativeEvent.coordinate; // Replace with your API key
-                const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
-                const response = await axios.get(url);
-                const {results} = response.data;
-                if (results.length > 0) {
-                  const value = results[0]?.formatted_address;
-                  setLocation({
-                    ...location,
-                    pickup: {
-                      latitude: latitude ?? 0,
-                      longitude: longitude ?? 0,
-                      pickup: true,
-                      Address: value,
-                    },
-                  });
-                  console.log('Address updated:', value);
-                } else {
-                  console.log('No address found for these coordinates.');
-                }
-              } catch (error) {
-                console.log('Error in onDragEnd', error);
-              }
+            nearbyPlacesAPI="GooglePlacesSearch"
+            debounce={400}
+            predefinedPlacesAlwaysVisible={true}
+            styles={{
+              description: {
+                color: Color.black,
+              },
+              powered: {width: 0, height: 0},
+              textInputContainer: {
+                backgroundColor: 'white',
+                borderWidth: 1,
+                borderColor: '#D8D8D8',
+                borderRadius: 5,
+                marginHorizontal: 10,
+                marginTop: 10,
+                placeholderTextColor: '#000',
+              },
+              textInput: {
+                color: Color.black,
+                fontFamily: Manrope.SemiBold,
+                fontSize: 16,
+                paddingBottom: 0,
+              },
+              predefinedPlacesDescription: {
+                color: '#1faadb',
+              },
             }}
-            title={'Pickup Location'}
-            description={'Drag to change Pickup location'}
-            pinColor={'#884190'}
+            renderRightButton={() => {
+              return (
+                <TouchableOpacity
+                  style={{
+                    marginHorizontal: 10,
+                    alignItems: 'center',
+                    bottom: 0,
+                    justifyContent: 'center',
+                  }}
+                  onPress={mapData => {
+                    refRBSheet?.current?.open();
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontFamily: Manrope.SemiBold,
+                      color: Color.DullOrange,
+                    }}>
+                    Done
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+            GooglePlacesDetailsQuery={{
+              fields: 'geometry',
+            }}
+            fetchDetails={true}
+            textInputProps={{
+              leftIcon: {type: 'font-awesome', name: 'chevron-left'},
+              errorStyle: {color: 'red'},
+              placeholderTextColor: Color.cloudyGrey,
+              placeholder: 'Pickup & Drop Location',
+              onFocus: () => {
+                console.log('dklvnjkvnfjbnjbn');
+              },
+            }}
+            query={{
+              key: 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk',
+              language: 'en',
+              components: 'country:in',
+              location: '10.7905,78.7047',
+              radius: 200000,
+            }}
+            onFail={error => console.error('catch the GeoCoding error', error)}
           />
-          {location?.pickup?.pickup && (
+        </View>
+
+        <View style={{width: width, height: height / 1.9, flex: 1}}>
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            region={origin}
+            showsUserLocation={true}
+            followsUserLocation={true}
+            showsMyLocationButton={true}
+            onPress={e => {
+              GetAddress(e.nativeEvent.coordinate);
+            }}>
             <Marker
               draggable
               coordinate={{
-                latitude: location.drop?.latitude,
-                longitude: location.drop?.longitude,
+                latitude: location.pickup?.latitude,
+                longitude: location.pickup?.longitude,
               }}
               onDragEnd={async e => {
                 try {
                   const apiKey = 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk';
-                  const {latitude, longitude} = e.nativeEvent.coordinate; // Replace with your API key
+                  const {latitude, longitude} = e.nativeEvent.coordinate;
                   const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
                   const response = await axios.get(url);
                   const {results} = response.data;
@@ -285,14 +370,13 @@ const Map_screen = () => {
                     const value = results[0]?.formatted_address;
                     setLocation({
                       ...location,
-                      drop: {
+                      pickup: {
                         latitude: latitude ?? 0,
                         longitude: longitude ?? 0,
-                        drop: true,
+                        pickup: true,
                         Address: value,
                       },
                     });
-                    console.log('Address updated:', value);
                   } else {
                     console.log('No address found for these coordinates.');
                   }
@@ -300,309 +384,323 @@ const Map_screen = () => {
                   console.log('Error in onDragEnd', error);
                 }
               }}
-              title={'Drop Location'}
-              description={'Drag to change Drop location'}
+              title={'Pickup Location'}
+              description={'Drag to change Pickup location'}
               pinColor={'#884190'}
             />
-          )}
-          {location?.pickup?.pickup && location?.drop?.drop && (
-            <MapViewDirections
-              origin={{
-                latitude: location.pickup?.latitude,
-                longitude: location.pickup?.longitude,
-              }}
-              destination={{
-                latitude: location.drop?.latitude,
-                longitude: location.drop?.longitude,
-              }}
-              apikey={'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk'}
-              strokeWidth={3}
-              strokeColor={'#884190'}
-              onReady={result => {
-                setDistance({
-                  distance: result?.distance,
-                  Time: result?.duration,
-                });
-              }}
-            />
-          )}
-        </MapView>
+            {location?.pickup?.pickup && (
+              <Marker
+                draggable
+                coordinate={{
+                  latitude: location.drop?.latitude,
+                  longitude: location.drop?.longitude,
+                }}
+                onDragEnd={async e => {
+                  try {
+                    const apiKey = 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk';
+                    const {latitude, longitude} = e.nativeEvent.coordinate;
+                    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`;
+                    const response = await axios.get(url);
+                    const {results} = response.data;
+                    if (results.length > 0) {
+                      const value = results[0]?.formatted_address;
+                      setLocation({
+                        ...location,
+                        drop: {
+                          latitude: latitude ?? 0,
+                          longitude: longitude ?? 0,
+                          drop: true,
+                          Address: value,
+                        },
+                      });
+                    } else {
+                      console.log('No address found for these coordinates.');
+                    }
+                  } catch (error) {
+                    console.log('Error in onDragEnd', error);
+                  }
+                }}
+                title={'Drop Location'}
+                description={'Drag to change Drop location'}
+                pinColor={'#884190'}
+              />
+            )}
+            {location?.pickup?.pickup && location?.drop?.drop && (
+              <MapViewDirections
+                origin={{
+                  latitude: location.pickup?.latitude,
+                  longitude: location.pickup?.longitude,
+                }}
+                destination={{
+                  latitude: location.drop?.latitude,
+                  longitude: location.drop?.longitude,
+                }}
+                apikey={'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk'}
+                strokeWidth={3}
+                strokeColor={'#884190'}
+                onReady={result => {
+                  setDistance({
+                    distance: result?.distance,
+                    Time: result?.duration,
+                  });
+                }}
+              />
+            )}
+          </MapView>
+        </View>
       </View>
-      <ScrollView style={{backgroundColor: Color?.white, flex: 1}}>
-        <View
+      <View>
+        <ScrollView
           style={{
-            flex: 1,
             backgroundColor: Color?.white,
-            padding: 10,
+            flex: isKeyboardVisible ? 1 : 0,
           }}>
-          <View style={{gap: 10}}>
-            <Text
-              style={{
-                color: Color?.black,
-                fontSize: 16,
-                fontWeight: '500',
-              }}>
-              Pickup & Drop Location
-            </Text>
-            <Pressable
-              style={{
-                borderWidth: 1,
-                borderRadius: 10,
-                borderColor: Color?.grey,
-                marginBottom: 10,
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingHorizontal: 10,
-              }}
-              onPress={() => {
-                setModalVisible(true);
-              }}>
+          <View
+            style={{
+              backgroundColor: Color?.white,
+              padding: 10,
+            }}>
+            <View style={{gap: 10, marginBottom: 20}}>
               <Text
                 style={{
                   color: Color?.black,
                   fontSize: 16,
-                  fontWeight: '200',
-                  padding: 10,
+                  fontWeight: '500',
                 }}>
                 Pickup & Drop Location
               </Text>
-              <Iconviewcomponent
-                Icontag={'Feather'}
-                iconname={'search'}
-                icon_size={20}
-                iconstyle={{color: Color?.grey}}
-              />
-            </Pressable>
-          </View>
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: Color?.grey,
-              padding: 10,
-              borderRadius: 10,
-              gap: 10,
-            }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 10,
-                  alignItems: 'center',
-                }}>
-                <Iconviewcomponent
-                  Icontag={'FontAwesome6'}
-                  iconname={'location-dot'}
-                  icon_size={20}
-                  iconstyle={{
-                    color: location?.pickup?.pickup ? 'green' : Color?.red,
-                  }}
-                />
-                <View
-                  style={{
-                    width: width * 0.5,
-                  }}>
-                  <Text
-                    style={{
-                      fontWeight: '300',
-                      color: location?.pickup?.pickup ? 'green' : Color?.red,
-                      fontSize: 16,
-                    }}>
-                    Pickup Location
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: '500',
-                      color: location?.pickup?.pickup ? 'green' : Color?.red,
-                      fontSize: 16,
-                    }}>
-                    {`${
-                      location?.pickup?.pickup
-                        ? location?.pickup?.Address
-                        : 'pickup Location'
-                    }`}
-                  </Text>
-                </View>
-              </View>
-              <View>
-                {location?.pickup?.pickup ? (
-                  <Iconviewcomponent
-                    Icontag={'AntDesign'}
-                    iconname={'checkcircle'}
-                    icon_size={20}
-                    iconstyle={{
-                      color: 'green',
-                    }}
-                  />
-                ) : (
-                  <Text
-                    style={{
-                      fontWeight: '500',
-                      color: location?.drop?.drop ? Color?.black : Color?.red,
-                      fontSize: 12,
-                      textTransform: 'capitalize',
-                    }}>
-                    not selected
-                  </Text>
-                )}
-              </View>
             </View>
             <View
               style={{
-                borderTopWidth: 1,
+                borderWidth: 1,
                 borderColor: Color?.grey,
-              }}
-            />
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                padding: 10,
+                borderRadius: 10,
+                gap: 10,
               }}>
               <View
                 style={{
                   flexDirection: 'row',
-                  gap: 10,
+                  justifyContent: 'space-between',
                   alignItems: 'center',
                 }}>
-                <Iconviewcomponent
-                  Icontag={'FontAwesome6'}
-                  iconname={'location-arrow'}
-                  icon_size={20}
-                  iconstyle={{
-                    color: location?.drop?.drop ? 'green' : Color?.red,
-                  }}
-                />
                 <View
                   style={{
-                    width: width * 0.5,
+                    flexDirection: 'row',
+                    gap: 10,
+                    alignItems: 'center',
                   }}>
-                  <Text
-                    style={{
-                      fontWeight: '300',
-                      color: location?.drop?.drop ? 'green' : Color?.red,
-                      fontSize: 16,
-                    }}>
-                    Drop Location
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: '500',
-                      color: location?.drop?.drop ? 'green' : Color?.red,
-                      fontSize: 16,
-                    }}>
-                    {`${
-                      location?.drop?.drop
-                        ? location?.drop?.Address
-                        : 'Drop Location'
-                    }`}
-                  </Text>
-                </View>
-              </View>
-              <View>
-                {location?.drop?.drop ? (
                   <Iconviewcomponent
-                    Icontag={'AntDesign'}
-                    iconname={'checkcircle'}
+                    Icontag={'FontAwesome6'}
+                    iconname={'location-dot'}
                     icon_size={20}
                     iconstyle={{
-                      color: 'green',
+                      color: location?.pickup?.pickup ? 'green' : Color?.red,
                     }}
                   />
-                ) : (
-                  <Text
+                  <View
                     style={{
-                      fontWeight: '500',
-                      color: Color?.red,
-                      fontSize: 12,
-                      textTransform: 'capitalize',
+                      width: width * 0.5,
                     }}>
-                    not selected
-                  </Text>
-                )}
+                    <Text
+                      style={{
+                        fontWeight: '300',
+                        color: location?.pickup?.pickup ? 'green' : Color?.red,
+                        fontSize: 16,
+                      }}>
+                      Pickup Location
+                    </Text>
+                    <Text
+                      style={{
+                        fontWeight: '500',
+                        color: location?.pickup?.pickup ? 'green' : Color?.red,
+                        fontSize: 16,
+                      }}>
+                      {`${
+                        location?.pickup?.pickup
+                          ? location?.pickup?.Address
+                          : 'pickup Location'
+                      }`}
+                    </Text>
+                  </View>
+                </View>
+                <View>
+                  {location?.pickup?.pickup ? (
+                    <Iconviewcomponent
+                      Icontag={'AntDesign'}
+                      iconname={'checkcircle'}
+                      icon_size={20}
+                      iconstyle={{
+                        color: 'green',
+                      }}
+                    />
+                  ) : (
+                    <Text
+                      style={{
+                        fontWeight: '500',
+                        color: Color?.red,
+                        fontSize: 12,
+                        textTransform: 'capitalize',
+                      }}>
+                      not selected
+                    </Text>
+                  )}
+                </View>
+              </View>
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderColor: Color?.grey,
+                }}
+              />
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    gap: 10,
+                    alignItems: 'center',
+                  }}>
+                  <Iconviewcomponent
+                    Icontag={'FontAwesome6'}
+                    iconname={'location-arrow'}
+                    icon_size={20}
+                    iconstyle={{
+                      color: location?.drop?.drop ? 'green' : Color?.red,
+                    }}
+                  />
+                  <View
+                    style={{
+                      width: width * 0.5,
+                    }}>
+                    <Text
+                      style={{
+                        fontWeight: '300',
+                        color: location?.drop?.drop ? 'green' : Color?.red,
+                        fontSize: 16,
+                      }}>
+                      Drop Location
+                    </Text>
+                    <Text
+                      style={{
+                        fontWeight: '500',
+                        color: location?.drop?.drop ? 'green' : Color?.red,
+                        fontSize: 16,
+                      }}>
+                      {`${
+                        location?.drop?.drop
+                          ? location?.drop?.Address
+                          : 'Drop Location'
+                      }`}
+                    </Text>
+                  </View>
+                </View>
+                <View>
+                  {location?.drop?.drop ? (
+                    <Iconviewcomponent
+                      Icontag={'AntDesign'}
+                      iconname={'checkcircle'}
+                      icon_size={20}
+                      iconstyle={{
+                        color: 'green',
+                      }}
+                    />
+                  ) : (
+                    <Text
+                      style={{
+                        fontWeight: '500',
+                        color: Color?.red,
+                        fontSize: 12,
+                        textTransform: 'capitalize',
+                      }}>
+                      not selected
+                    </Text>
+                  )}
+                </View>
               </View>
             </View>
           </View>
-        </View>
-        {location?.pickup?.pickup && location?.drop?.drop ? (
-          <View
-            style={{
-              padding: 15,
-              backgroundColor: Color?.white,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}>
-            {distance?.Time ? (
-              <View>
-                <Text
-                  style={{
-                    color: Color?.black,
-                    fontWeight: '500',
-                    fontSize: 16,
-                    textTransform: 'capitalize',
-                  }}>
-                  Time
-                </Text>
-                <Text
-                  style={{
-                    color:'#884190',
-                    fontWeight: '500',
-                    fontSize: 16,
-                    textTransform: 'capitalize',
-                  }}>
-                  {distance?.Time?.toFixed(2) + ' min'}
-                </Text>
-              </View>
-            ) : null}
+          {location?.pickup?.pickup && location?.drop?.drop ? (
+            <View
+              style={{
+                padding: 10,
+                backgroundColor: Color?.white,
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+              }}>
+              {distance?.Time ? (
+                <View>
+                  <Text
+                    style={{
+                      color: Color?.black,
+                      fontWeight: '500',
+                      fontSize: 16,
+                      textTransform: 'capitalize',
+                    }}>
+                    Time
+                  </Text>
+                  <Text
+                    style={{
+                      color: '#884190',
+                      fontWeight: '500',
+                      fontSize: 16,
+                      textTransform: 'uppercase',
+                    }}>
+                    {Math.round(distance?.Time) + ' min'}
+                  </Text>
+                </View>
+              ) : null}
 
-            {distance?.distance ? (
-              <View>
-                <Text
-                  style={{
-                    color: Color?.black,
-                    fontWeight: '500',
-                    fontSize: 16,
-                    textTransform: 'capitalize',
-                  }}>
-                  Duration
-                </Text>
-                <Text
-                  style={{
-                    color:'#884190',
-                    fontWeight: '500',
-                    fontSize: 16,
-                    textTransform: 'capitalize',
-                  }}>
-                  {distance?.distance ? `${distance?.distance} KM` : null}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+              {distance?.distance ? (
+                <View>
+                  <Text
+                    style={{
+                      color: Color?.black,
+                      fontWeight: '500',
+                      fontSize: 16,
+                      textTransform: 'capitalize',
+                    }}>
+                    Duration
+                  </Text>
+                  <Text
+                    style={{
+                      color: '#884190',
+                      fontWeight: '500',
+                      fontSize: 16,
+                      textTransform: 'uppercase',
+                    }}>
+                    {distance?.distance
+                      ? `${Math.round(distance?.distance)} KM`
+                      : null}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </ScrollView>
         <TouchableOpacity
           disabled={
             location?.pickup?.pickup && location?.drop?.drop ? false : true
           }
           onPress={() => ConfirmLocation()}
           style={{
-            padding: 10,
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 10,
             backgroundColor:
               location?.pickup?.pickup && location?.drop?.drop
                 ? '#884190'
                 : '#dda0dd',
-            alignItems: 'center',
-            justifyContent: 'center',
             flexDirection: 'row',
-            gap: 10,
+            padding: 15,
           }}>
           <Text
             style={{
-              color: Color.white,
+              color: Color?.white,
               fontSize: 16,
             }}>
             Confirm Location
@@ -614,188 +712,8 @@ const Map_screen = () => {
             iconstyle={{color: Color?.white}}
           />
         </TouchableOpacity>
-      </ScrollView>
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}>
-        <ScrollView
-          style={{flex: 1, backgroundColor: 'white', padding: 10}}
-          keyboardShouldPersistTaps="always">
-          <View style={{gap: 10, flex: 1}}>
-            <Text
-              style={{
-                fontWeight: '500',
-                fontSize: 16,
-                color: Color?.black,
-                textTransform: 'capitalize',
-              }}>
-              search pickup & drop location
-            </Text>
-            <GooglePlacesAutocomplete
-              placeholder="Search"
-              onPress={(data, details = null) => {
-                setSearchlistData({
-                  location: data?.description,
-                  data: details?.geometry,
-                });
-              }}
-              nearbyPlacesAPI="GooglePlacesSearch" // Prioritize nearby results
-              debounce={400}
-              predefinedPlacesAlwaysVisible={true}
-              styles={{
-                description: {
-                  color: Color.black,
-                },
-                powered: {width: 0, height: 0},
-                textInputContainer: {
-                  flex: 1,
-                  backgroundColor: 'white',
-                  borderWidth: 1,
-                  borderColor: '#D8D8D8',
-                  borderRadius: 5,
-                  marginHorizontal: 10,
-                  marginTop: 10,
-                  placeholderTextColor: '#000',
-                },
-                textInput: {
-                  color: Color.black,
-                  fontFamily: Manrope.SemiBold,
-                  fontSize: 16,
-                  paddingBottom: 0,
-                },
-                predefinedPlacesDescription: {
-                  color: '#1faadb',
-                },
-              }}
-              renderRightButton={() => {
-                return (
-                  <TouchableOpacity
-                    style={{
-                      // position: 'absolute',
-                      // top: 0,
-                      // zIndex: 1,
-                      marginHorizontal: 10,
-                      alignItems: 'center',
-                      bottom: 0,
-                      justifyContent: 'center',
-                    }}
-                    onPress={mapData => {
-                      refRBSheet?.current?.open();
-                    }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontFamily: Manrope.SemiBold,
-                        color: Color.DullOrange,
-                      }}>
-                      Done
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }}
-              GooglePlacesDetailsQuery={{
-                fields: 'geometry',
-              }}
-              fetchDetails={true}
-              textInputProps={{
-                leftIcon: {type: 'font-awesome', name: 'chevron-left'},
-                errorStyle: {color: 'red'},
-                placeholderTextColor: Color.cloudyGrey,
-              }}
-              query={{
-                key: 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk',
-                language: 'en',
-                components: 'country:in',
-                location: '10.7905,78.7047',
-                radius: 200000,
-              }}
-              onFail={error =>
-                console.error('catch the GeoCoding error', error)
-              }
-            />
-            {/* <View style={{padding: 10}}>
-              <GooglePlacesAutocomplete
-                placeholder="Search"
-                onPress={(data, details = null) => {
-                  // 'details' is provided when fetchDetails = true
-                  console.log('wwwwwww');
+      </View>
 
-                  console.log(data, details);
-                }}
-                nearbyPlacesAPI="GooglePlacesSearch" // Prioritize nearby results
-                debounce={400} // Reduce API calls for quick typing
-                predefinedPlacesAlwaysVisible={true}
-                styles={{
-                  description: {
-                    color: '#000',
-                  },
-                  powered: {width: 0, height: 0}, // Hide Google branding
-                  textInputContainer: {
-                    flex: 1,
-                    backgroundColor: 'white',
-                    borderWidth: 1,
-                    borderColor: '#D8D8D8',
-                    borderRadius: 5,
-                    marginHorizontal: 10,
-                    marginTop: 10,
-                  },
-                  textInput: {
-                    color: '#000',
-                    fontFamily: 'Manrope-SemiBold', // Ensure this font is loaded
-                    fontSize: 16,
-                    paddingBottom: 0,
-                  },
-                  predefinedPlacesDescription: {
-                    color: '#1faadb',
-                  },
-                }}
-                renderRightButton={() => (
-                  <TouchableOpacity
-                    style={{
-                      marginHorizontal: 10,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                    onPress={() => setModalVisible(!modalVisible)}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontFamily: 'Manrope-SemiBold',
-                        color: '#FFA500',
-                      }}>
-                      Done
-                    </Text>
-                  </TouchableOpacity>
-                )}
-                GooglePlacesDetailsQuery={{
-                  fields: 'geometry', // Fetch geometry details of the place
-                }}
-                fetchDetails={true} // Fetch full place details on selection
-                textInputProps={{
-                  placeholderTextColor: '#999',
-                  value: selectedPlace,
-                  onChangeText: text => {
-                    console.log('fffff', text);
-                    setSelectedPlace(text);
-                  },
-                }}
-                query={{
-                  key: 'AIzaSyAOl88J2TyN1uxEENd8sjtYNq8Xa2nW4rk', // Replace with your Google API key
-                  language: 'en', // Language for results
-                  components: 'country:in', // Filter results to India
-                  location: '28.6139,77.2090', // Example location (Delhi)
-                  radius: 50000, // Show places within 50 km
-                }}
-              />
-            </View> */}
-          </View>
-        </ScrollView>
-      </Modal>
-      {/* Buttom Sheet */}
       <RBSheet
         ref={refRBSheet}
         closeOnDragDown={true}
@@ -842,7 +760,7 @@ const Map_screen = () => {
                       selected ? 'radio-btn-active' : 'radio-btn-passive'
                     }
                     icon_size={20}
-                    iconstyle={{color:'#884190'}}
+                    iconstyle={{color: '#884190'}}
                   />
                   <Text
                     style={{
@@ -858,7 +776,7 @@ const Map_screen = () => {
           </View>
           <TouchableOpacity
             style={{
-              backgroundColor:'#884190',
+              backgroundColor: '#884190',
               padding: 10,
               alignItems: 'center',
             }}
@@ -875,6 +793,9 @@ const Map_screen = () => {
                 });
                 refRBSheet.current.close();
                 setModalVisible(false);
+                if (googlePlacesRef.current) {
+                  googlePlacesRef.current.clear();
+                }
               } else {
                 setLocation({
                   ...location,
@@ -887,6 +808,9 @@ const Map_screen = () => {
                 });
                 refRBSheet.current.close();
                 setModalVisible(false);
+                if (googlePlacesRef.current) {
+                  googlePlacesRef.current.clear();
+                }
               }
             }}>
             <Text
@@ -985,9 +909,9 @@ const styles = StyleSheet.create({
   },
   line: {
     marginVertical: height * 0.002,
-    borderBottomColor: '#cccccc', // Adjust the color as needed
+    borderBottomColor: '#cccccc',
     borderBottomWidth: 1,
-    width: '100%', // Adjust the width as needed
+    width: '100%',
   },
   next: {
     backgroundColor: Color.primary,

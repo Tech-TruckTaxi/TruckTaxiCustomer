@@ -1,26 +1,17 @@
 import React, {
-    Component,
-    useContext,
     useState,
-    useRef,
     useEffect,
-    Fragment,
 } from 'react';
 import {
     View,
     Text,
-    Image,
     StyleSheet,
-    RefreshControl,
     ScrollView,
     Linking,
-    PermissionsAndroid,
     TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
-import { Divider, TouchableRipple } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/Ionicons';
 import RNImmediatePhoneCall from 'react-native-immediate-phone-call';
 import Color from '../Global/Color';
 import { Manrope } from '../Global/FontFamily';
@@ -31,8 +22,6 @@ const ContactScreen = ({ navigation }) => {
 
     const [ContactData, setContactData] = useState([]);
     const [showLoading, setshowLoading] = useState(false);
-    const [refreshing, setRefreshing] = React.useState(false);
-
     useEffect(() => {
         navigation.setOptions({
             title: (
@@ -103,8 +92,8 @@ const ContactScreen = ({ navigation }) => {
                 <View style={{ width: '95%', alignItems: 'center' }}>
                     <Text style={{ width: '100%', paddingHorizontal: 15, paddingVertical: 20, textAlign: 'justify', fontSize: 16, fontFamily: Manrope.Medium, color: Color.black2 }}>Over the course of its journey, it has earned countless testimonials and praise-worthy reviews for its impeccable moving services from its loyal base of customers.</Text>
                     <View style={{ width: '100%', paddingHorizontal: 15 }}>
-                        <Text style={{ fontSize: 16, color: Color.black3, fontFamily: Manrope.Medium, letterSpacing: 0.5 }}>Address</Text>
-                        <Text style={{ fontSize: 16, color: Color.black2, fontFamily: Manrope.SemiBold, letterSpacing: 0.5, lineHeight: 22, paddingVertical: 5 }}>Trucktaxi services, #122, Sarojini street, Ram nagar, Coimbatore 641009</Text>
+                        {/* <Text style={{ fontSize: 16, color: Color.black3, fontFamily: Manrope.Medium, letterSpacing: 0.5 }}>Address</Text>
+                        <Text style={{ fontSize: 16, color: Color.black2, fontFamily: Manrope.SemiBold, letterSpacing: 0.5, lineHeight: 22, paddingVertical: 5 }}>Trucktaxi services, #122, Sarojini street, Ram nagar, Coimbatore 641009</Text> */}
                     </View>
                     <View style={{ width: '100%', paddingHorizontal: 15, paddingVertical: 10 }}>
                         <Text style={{ fontSize: 16, color: Color.black3, fontFamily: Manrope.Medium, letterSpacing: 0.5 }}>Phone</Text>
@@ -128,11 +117,10 @@ const ContactScreen = ({ navigation }) => {
                     <View style={{ width: '100%', paddingHorizontal: 15, paddingVertical: 10 }}>
                         <Text style={{ fontSize: 16, color: Color.black3, fontFamily: Manrope.Medium, letterSpacing: 0.5 }}>Website</Text>
                         <TouchableOpacity onPress={() => { Linking.openURL('https://www.trucktaxi.in') }}>
-                            <Text style={{ fontSize: 16, color: Color.black2, fontFamily: Manrope.SemiBold, letterSpacing: 0.5, lineHeight: 22, paddingVertical: 5 }}>info@trucktaxi.in</Text>
+                            <Text style={{ fontSize: 16, color: Color.black2, fontFamily: Manrope.SemiBold, letterSpacing: 0.5, lineHeight: 22, paddingVertical: 5 }}>www.trucktaxi.in</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
-
                 <View style={styles.bg}>
                     <View style={{ width: '100%', paddingHorizontal: 15, paddingVertical: 10 }}>
                         <Text style={{ fontSize: 16, color: Color.black3, fontFamily: Manrope.Medium, letterSpacing: 0.5, paddingVertical: 10 }}>Social Media</Text>
@@ -140,7 +128,7 @@ const ContactScreen = ({ navigation }) => {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 10 }}>
                             <TouchableOpacity onPress={() => {
                                 let url = ContactData.whatsapp
-                                Linking.openURL(url)
+                                Linking.openURL("https://wa.me/message/LXYL2UJAYMI2C1")
                             }} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                 <Iconviewcomponent
                                     Icontag={'Ionicons'}
@@ -153,7 +141,7 @@ const ContactScreen = ({ navigation }) => {
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => {
                                 let url = ContactData.facebook
-                                Linking.openURL(url)
+                                Linking.openURL("https://www.facebook.com/trucktaxi.in?mibextid=ZbWKwL")
                             }}
                                 style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                 <Iconviewcomponent
@@ -169,7 +157,7 @@ const ContactScreen = ({ navigation }) => {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 10 }}>
                             <TouchableOpacity onPress={() => {
                                 let url = ContactData.instagram
-                                Linking.openURL(url)
+                                Linking.openURL("https://www.instagram.com/invites/contact/?igsh=cynijlhffeib&utm_content=ogkdtpq")
                             }} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                 <Iconviewcomponent
                                     Icontag={'Ionicons'}
@@ -181,7 +169,7 @@ const ContactScreen = ({ navigation }) => {
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => {
                                 let url = ContactData.linkedin
-                                Linking.openURL(url)
+                                Linking.openURL("https://www.linkedin.com/in/truck-taxi-b0977a182?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app")
                             }}
                                 style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                 <Iconviewcomponent

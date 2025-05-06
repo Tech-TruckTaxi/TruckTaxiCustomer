@@ -6,7 +6,7 @@ buildscript {
         compileSdkVersion = 34
         targetSdkVersion = 34
         ndkVersion = "21.3.6528147"
-        kotlinVersion = "1.9.22"
+        kotlinVersion = "1.5.31"
         playServicesLocationVersion = "21.0.1"
         // firebaseBomVersion = "32.2.0"  // Make sure this is the latest version
     }

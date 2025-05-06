@@ -196,8 +196,8 @@ export function DrawerContent(props) {
             label="Contact"
             onPress={() => { props.navigation.navigate('contact') }}
           />
-          <View style={{ width: '100%', height: 1, backgroundColor: Color.softGrey, marginVertical: 5 }}></View>
-          <DrawerItem
+          {/* <View style={{ width: '100%', height: 1, backgroundColor: Color.softGrey, marginVertical: 5 }}></View> */}
+          {/* <DrawerItem
             icon={({ color, size }) => (
               <Iconviewcomponent
                 Icontag={'MaterialIcons'}
@@ -221,7 +221,7 @@ export function DrawerContent(props) {
             )}
             label="Terms and Conditions"
             onPress={() => { props.navigation.navigate('TermsandConditions') }}
-          />
+          /> */}
           <View style={{ width: '100%', height: 1, backgroundColor: Color.softGrey, marginVertical: 5 }}></View>
           < DrawerItem
             icon={({ color, size }) => (

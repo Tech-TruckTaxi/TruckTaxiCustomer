@@ -38,7 +38,6 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import {CommonActions} from '@react-navigation/native';
-
 import {
   Back,
   LocationBox,
@@ -54,6 +53,9 @@ import {Manrope} from '../Global/FontFamily';
 import {Iconviewcomponent} from '../Global/Icontag';
 const {width, height} = Dimensions.get('screen');
 const BookingPreview = ({navigation, route}) => {
+  console.log('XXXXXXXXXXXddddXXXXXXXXXXXX');
+  console.log(route?.params, 'sssss');
+  console.log('XXXXXXXXXXXXXXXXXXXXXXX');
   const [region, setregion] = useState({
     latitude: 12.9630208,
     longitude: 80.1898496,
@@ -61,9 +63,6 @@ const BookingPreview = ({navigation, route}) => {
     longitudeDelta: 0.0134,
   });
   const mapView = useRef();
-  // const origin = useSelector(selectOrigin);
-  // const destination = useSelector(selectDestination);
-
   const [duration, setduration] = React.useState(null);
   const [initorigin, setinitorigin] = useState(null);
   const [initdrop, setinitdrop] = useState(null);
@@ -76,6 +75,7 @@ const BookingPreview = ({navigation, route}) => {
   const {nightID} = route.params;
   const {location} = route.params;
   const {alternativemobno} = route.params;
+  const {distance} = route.params;
 
   const {selectedvehcilelist} = route.params;
   const {tripValue} = route.params;
@@ -88,6 +88,7 @@ const BookingPreview = ({navigation, route}) => {
   const {total} = route.params;
   const {tripTypeid} = route.params;
   const {interfare} = route.params;
+  const {iscv} = route.params;
 
   const dispatch = useDispatch();
   const inputRef = useRef(null);
@@ -96,17 +97,17 @@ const BookingPreview = ({navigation, route}) => {
   const [isPinReady, setIsPinReady] = useState(false);
   const [bookingOTPVisible, setBookingOTPVisible] = useState(false);
   const [bookingData, setBookingData] = useState({});
-  console.log('ddddddddddddd', location, 'ooooooooooooooooo');
+  console.log(
+    'distancedistancedistancedistance',
+    distance,
+    'ooooooooooooooooo',
+  );
 
   useEffect(() => {
     navigation.setOptions({
       title: <Text>Booking Preview</Text>,
     });
   });
-
-  // useEffect(() => {
-  //   reload();
-  // }, [origin, destination]);
 
   React.useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -116,11 +117,7 @@ const BookingPreview = ({navigation, route}) => {
   }, [navigation]);
 
   const reload = () => {
-    // if (destination != null) {
     console.log('Regular Call');
-    // setpickadd(origin);
-    // setpickdrop(destination);
-
     setinitorigin({
       latitude: 11.0168,
       longitude: 76.9558,
@@ -139,11 +136,9 @@ const BookingPreview = ({navigation, route}) => {
     setshowLoading(true);
     setamount(peakfare);
     setshowLoading(false);
-    // }
   };
 
   const ConfirmBooking = () => {
-    // setshowLoading(true);
     AsyncStorage.getItem('user').then(mobile => {
       AsyncStorage.getItem('userToken').then(value => {
         var myHeaders = new Headers();
@@ -162,10 +157,48 @@ const BookingPreview = ({navigation, route}) => {
           .then(response => response.json())
           .then(result => {
             console.log('sssssssssssss', result);
-
             var id = result.data[0].customerid;
             var cityidid = result.data[0].cityid;
-            let date = moment(datetosend, 'DD-MM-YYYY').format('YYYY-MM-DD');
+            const isValidTrip = (tripDate, tripTime) => {
+              const currentDate = new Date();
+              const selectedDateTime = new Date(`${tripDate} ${tripTime}`);
+              const formattedCurrentDate = currentDate
+                .toISOString()
+                .split('T')[0];
+              const formattedTripDate = tripDate;
+
+              console.log('Selected DateTime:', selectedDateTime);
+              console.log('Current DateTime:', currentDate);
+              if (formattedTripDate > formattedCurrentDate) {
+                return true;
+              } else if (formattedTripDate === formattedCurrentDate) {
+                const currentHours = currentDate?.getHours();
+                const currentMinutes = currentDate?.getMinutes();
+
+                const [tripHours, tripMinutes] = tripTime
+                  .replace(/AM|PM/, '')
+                  .split(':')
+                  .map(Number);
+
+                const isPM = tripTime?.includes('PM');
+                const selectedHours =
+                  isPM && tripHours !== 12 ? tripHours + 12 : tripHours % 12;
+
+                if (
+                  selectedHours > currentHours ||
+                  (selectedHours === currentHours &&
+                    tripMinutes >= currentMinutes)
+                ) {
+                  return true;
+                }
+              }
+
+              return false;
+            };
+            const data = isValidTrip(datetosend, time);
+            const getCurrentTime = () => {
+              return moment().format('hh:mm A');
+            };
             var raw = JSON.stringify({
               cityid: cityidid,
               mobileno: mobile,
@@ -177,62 +210,42 @@ const BookingPreview = ({navigation, route}) => {
               toloclat: location?.drop?.latitude.toString(),
               toloclong: location?.drop?.longitude.toString(),
               tripdate: datetosend,
-              triptime: time,
-              noofbookings: tripcount,
+              triptime: data ? time : getCurrentTime(),
+              noofbookings: 1,
+              iscv: iscv,
               triptype: tripTypeid,
               packagetype: packageid,
               nighttype: nightID,
-              intercitytype: interfare,
-              vechicletype: selectedvehcilelist.id,
+              intercitytype: `${Math.round(
+                selectedvehcilelist?.basekm,
+              )}-${interfare}-${selectedvehcilelist?.baseminute}`,
+              vechicletype: selectedvehcilelist?.vehicleID,
               goodstype: goodValue?.goodsname,
               customerid: id,
               alternativemobno: alternativemobno,
-            });
-            console.log('fffffffffffffffffffff', raw);
+              distance : distance?.distance
 
+            });
             var requestOptions = {
               method: 'POST',
               headers: myHeaders,
               body: raw,
               redirect: 'follow',
             };
-
             fetch(
               'https://trucktaxi.co.in/api/customer/booknow',
               requestOptions,
             )
               .then(response => response.json())
               .then(result => {
-                console.log(
-                  'Confirm booking resp ============= :',
-                  JSON.stringify(result),
-                );
                 if (result.data[0].status == 200) {
                   setshowLoading(false);
                   setBookingOTPVisible(true);
+                  console.log('result', result?.data[0]);
                   setBookingData(result?.data?.[0]);
-                  ToastAndroid.show(
-                    result?.data?.[0]?.message,
-                    ToastAndroid.SHORT,
-                  );
-                  // dispatch(
-                  //     setNull()
-                  // );
                 } else {
                   ToastAndroid.show('Try again later', ToastAndroid.SHORT);
                 }
-
-                // setshowLoading(false)
-                // console.log(result)
-                // if (result.data[0].status == 200) {
-                //     navigation.navigate('bookingotp', {
-                //         bookingid: result.data[0].bookid
-                //     });
-
-                //     dispatch(
-                //         setNull()
-                //     );
-                // }
               })
               .catch(error => {
                 setshowLoading(false);
@@ -250,7 +263,7 @@ const BookingPreview = ({navigation, route}) => {
       AsyncStorage.getItem('userToken').then(value => {
         var myHeaders = new Headers();
         myHeaders.append('Authorization', 'Bearer ' + value);
-        myHeaders.append('Content-Type', 'application/json');
+        myHeaders.append('Content-Type', 'multipart/form-data');
         var requestOptions = {
           method: 'GET',
           headers: myHeaders,
@@ -266,36 +279,79 @@ const BookingPreview = ({navigation, route}) => {
             var id = result.data[0].customerid;
             var cityidid = result.data[0].cityid;
             let date = moment(datetosend, 'DD-MM-YYYY').format('YYYY-MM-DD');
-            console.log('dddddddd', result);
+            const isValidTrip = (tripDate, tripTime) => {
+              const currentDate = new Date();
+              const selectedDateTime = new Date(`${tripDate} ${tripTime}`);
+              const formattedCurrentDate = currentDate
+                .toISOString()
+                .split('T')[0];
+              const formattedTripDate = tripDate;
+              if (formattedTripDate > formattedCurrentDate) {
+                return true;
+              } else if (formattedTripDate === formattedCurrentDate) {
+                const currentHours = currentDate?.getHours();
+                const currentMinutes = currentDate?.getMinutes();
 
-            var raw = JSON.stringify({
-              branchid: cityidid,
-              mobileno: mobile,
-              name: result.data[0].customername,
-              fromloc: location?.pickup?.Address,
-              fromloclat: location?.pickup?.latitude.toString(),
-              fromloclong: location?.pickup?.longitude.toString(),
-              toloc: location?.drop?.Address,
-              toloclat: location?.drop?.latitude.toString(),
-              toloclong: location?.drop?.longitude.toString(),
-              tripdate: date,
-              triptime: time,
-              intercitytype: interfare,
-              triptype: tripTypeid,
-              packagetype: packageid,
-              intercitytype: interfare,
-              vechicletype: selectedvehcilelist.id,
-              goodstype: goodValue,
-              customerid: id,
-            });
-            console.log('ddddd', raw);
+                const [tripHours, tripMinutes] = tripTime
+                  .replace(/AM|PM/, '')
+                  .split(':')
+                  .map(Number);
+
+                const isPM = tripTime?.includes('PM');
+                const selectedHours =
+                  isPM && tripHours !== 12 ? tripHours + 12 : tripHours % 12;
+
+                if (
+                  selectedHours > currentHours ||
+                  (selectedHours === currentHours &&
+                    tripMinutes >= currentMinutes)
+                ) {
+                  return true;
+                }
+              }
+
+              return false;
+            };
+            const data = isValidTrip(datetosend, time);
+            const getCurrentTime = () => {
+              return moment().format('hh:mm A'); // Example Output: "03:08 PM"
+            };
+            var formData = new FormData();
+
+            formData.append('branchid', cityidid);
+            formData.append('mobileno', mobile);
+            formData.append('name', result.data[0].customername);
+            formData.append('fromloc', location?.pickup?.Address);
+            formData.append(
+              'fromloclat',
+              location?.pickup?.latitude.toString(),
+            );
+            formData.append(
+              'fromloclong',
+              location?.pickup?.longitude.toString(),
+            );
+            formData.append('toloc', location?.drop?.Address);
+            formData.append('toloclat', location?.drop?.latitude.toString());
+            formData.append('toloclong', location?.drop?.longitude.toString());
+            formData.append('tripdate', datetosend);
+            formData.append('triptime', data ? time : getCurrentTime());
+            formData.append('triptype', tripTypeid);
+            formData.append('packagetype', packageid);
+            formData.append('intercitytype', interfare);
+            formData.append('vechicletype', selectedvehcilelist?.vehicleID);
+            formData.append('goodstype', goodValue?.goodsname);
+            formData.append('customerid', id);
+            formData.append('fare', total);
+            formData.append('distance', distance?.distance);
+            formData.append('iscv', iscv);
+
+            console.log('enquiry payload data <=====>', formData);
             var requestOptions = {
               method: 'POST',
               headers: myHeaders,
-              body: raw,
+              body: formData,
               redirect: 'follow',
             };
-
             fetch(
               'https://trucktaxi.co.in/api/customer/addenquiry',
               requestOptions,
@@ -303,14 +359,15 @@ const BookingPreview = ({navigation, route}) => {
               .then(response => response.json())
               .then(result => {
                 setshowLoading(false);
-                console.log(result);
-
                 if (result.data[0].status == 200) {
-                  CommonActions.reset({
+                  navigation.reset({
                     index: 0,
-                    routes: [{name: 'Home'}],
+                    routes: [{name: 'New Booking'}],
                   });
-                  alert('Enquiry Sent');
+                  ToastAndroid.show(
+                    'Enquiry Sent successfully',
+                    ToastAndroid.SHORT,
+                  );
                   navigation.navigate('Home');
                   dispatch(setNull());
                 }
@@ -349,19 +406,6 @@ const BookingPreview = ({navigation, route}) => {
           )
             .then(response => response.json())
             .then(result => {
-              console.log('Sucess Verify OTP resp ----:', result);
-              // if (result.status == 200) {
-              //     setshowLoading(true)
-              //     alert('Booking Successful')
-              //     navigation.reset({
-              //         index: 0,
-              //         routes: [{ name: 'My Bookings' }]
-              //     })
-              // }
-              // else {
-              //     alert('Invalid OTP')
-              // }
-
               if (result?.status == 200) {
                 setshowLoading(false);
                 ToastAndroid.show(result?.message, ToastAndroid.SHORT);
@@ -370,7 +414,6 @@ const BookingPreview = ({navigation, route}) => {
                   index: 0,
                   routes: [{name: 'New Booking'}],
                 });
-                // navigation.replace('New Booking');
               } else {
                 ToastAndroid.show(result?.message, ToastAndroid.SHORT);
                 setshowLoading(false);

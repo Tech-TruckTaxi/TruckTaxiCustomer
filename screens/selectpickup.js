@@ -55,53 +55,7 @@ const PickupPointScreen = ({ navigation }) => {
   const [distance, setDistance] = useState('');
   const [duration, setDuration] = useState('');
 
-  // useEffect(() => {
-  //   const timeoutId = setTimeout(() => {
-  //     fetchInitialLocation();
-  //   }, 1000);
-
-  //   const fetchInitialLocation = async () => {
-  //     try {
-  //       Geolocation.getCurrentPosition(
-  //         async position => {
-  //           clearTimeout(timeoutId);
-  //           const {latitude, longitude} = position.coords;
-
-  //           const response = await Geocoder.from({latitude, longitude});
-  //           const address = response.results[0].formatted_address;
-
-  //           setDetectedAddress(address);
-  //           setRegion({
-  //             latitude,
-  //             longitude,
-  //             latitudeDelta: 0.0143,
-  //             longitudeDelta: 0.0134,
-  //           });
-
-  //           dispatch(
-  //             setOrigin({
-  //               location: {
-  //                 lat: latitude,
-  //                 lng: longitude,
-  //               },
-  //               description: address,
-  //             }),
-  //           );
-  //         },
-  //         error => {
-  //           console.error('Error fetching location:', error.message);
-  //         },
-  //         {
-  //           timeout: 10000,
-  //           enableHighAccuracy: true,
-  //           maximumAge: 1000,
-  //         },
-  //       );
-  //     } catch (error) {
-  //       console.error('Unexpected error:', error);
-  //     }
-  //   };
-  // }, []);
+ 
 
   useEffect(() => {
     getCurrentLocationAndAddress();
@@ -129,7 +83,7 @@ const PickupPointScreen = ({ navigation }) => {
       position => {
         const { latitude, longitude } = position.coords;
         console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-        // You can now use these coordinates to get the address
+      
       },
       error => {
         console.log(error.code, error.message);
@@ -363,9 +317,6 @@ const PickupPointScreen = ({ navigation }) => {
   const handleMapPress = async event => {
     const { latitude, longitude } = event.nativeEvent.coordinate;
     const address = await getAddressFromCoordinates(latitude, longitude);
-
-    // const response = await Geocoder.from({latitude, longitude});
-    // const address = response.results[0].formatted_address;
     const parts = address.split(', ');
     if (selectedLocation == 'pickup' || selectedLocation == '') {
       dispatch(
@@ -612,9 +563,7 @@ const PickupPointScreen = ({ navigation }) => {
               <View>
                 <TouchableOpacity
                   onPress={() => confirmLocation()}
-                // onPress={() => {
-                //     navigation.navigate('Home')
-                // }}
+               
                 >
                   <LinearGradient
                     colors={['#85388d', '#85388d']}
@@ -684,8 +633,6 @@ const styles = StyleSheet.create({
   },
   autocompleteView: {
     position: 'absolute',
-    // right: 20,
-    // top: height * 0.05,
     width: width * 0.9,
     zIndex: 999,
   },

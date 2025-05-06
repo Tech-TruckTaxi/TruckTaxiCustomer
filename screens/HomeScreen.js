@@ -1,10 +1,9 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState} from 'react';
 import {
   View,
   PermissionsAndroid,
   ToastAndroid,
   Text,
-  Button,
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
@@ -14,92 +13,39 @@ import {
   ScrollView,
   TextInput,
   Platform,
-  Modal,
+  Pressable,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const ITEM_SIZE = Platform.OS === 'ios' ? width * 0.72 : width * 0.54;
-const { width, height } = Dimensions.get('window');
-import { P, H5 } from '../components/typography';
+const {width, height} = Dimensions.get('window');
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import LinearGradient from 'react-native-linear-gradient';
-import { IndexPath, Layout, Select, SelectItem } from '@ui-kitten/components';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector} from 'react-redux';
 import {
   selectDestination,
   selectOrigin,
-  setTravelTimeInformation,
 } from '../slices/navSlice';
-import BookingPreview from './bookingPreview';
 import RNRestart from 'react-native-restart';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import messaging from '@react-native-firebase/messaging';
 import DatePicker from 'react-native-date-picker';
 import Color from '../Global/Color';
-import { Manrope } from '../Global/FontFamily';
-import { Iconviewcomponent } from '../Global/Icontag';
+import {Manrope} from '../Global/FontFamily';
+import {Iconviewcomponent} from '../Global/Icontag';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { useFocusEffect } from '@react-navigation/native';
 
-const HomeScreen = ({ navigation, route }) => {
-  console.log('CCCCCCCCCCCCCCC', route.params.Distance.distance);
-
-  const { width, height } = Dimensions.get('window');
+const HomeScreen = ({navigation, route}) => {
+  const {width, height} = Dimensions.get('window');
   const [showLoading, setshowLoading] = useState(false);
   const [vehcilelist, setvehcilelist] = useState([]);
-  const [selectedvehcilelist, setselectedvehcilelist] = useState({
-    addkmcharge: '20',
-    addminutecharge: '3',
-    feet: '7.5 feet',
-    id: 1,
-    loadcapacity: '1000 kgs',
-    url: 'https://trucktaxi.co.in/api/images/tataace.png',
-    vehicletype: 'TataAce',
-  });
-  const [selectVehicleid, setselectVehicleId] = useState('');
-
-  const [goodValue, setgoodValue] = useState();
-  const [tripValue, settripValue] = useState('Meter Fare');
   const [tripType, settripType] = React.useState([]);
-  const [tripTypeid, settripTypeid] = React.useState(1);
-
-  const [packageType, setpackageType] = React.useState([]);
-  const [Packagevalue, setPackagevalue] = React.useState([]);
-  const [Packageselcted, setPackageselcted] = React.useState([]);
-
-  const [intercityType, setintercityType] = React.useState([]);
-  const [intercityvalue, setIntercityValue] = React.useState([]);
-  const [intercityselcted, setInterCitySelcted] = React.useState([]);
-
-  const [nightFareType, setNightFareType] = React.useState([]);
-  const [nightFareValue, setNightFareValue] = React.useState([]);
-  const [nightSelcted, setNightSelcted] = React.useState([]);
-
-  const [tripIndex, settripIndex] = React.useState();
-  const [packageIndex, setpackageIndex] = React.useState();
-  const [interCityIndex, setinterCityIndex] = React.useState();
-  const [nightIndex, setNightIndex] = React.useState();
-  const [goodIndex, setgoodIndex] = React.useState();
+  
   const origin = useSelector(selectOrigin);
   const destination = useSelector(selectDestination);
   const [initorigin, setinitorigin] = useState('');
   const [initdrop, setinitdrop] = useState('');
   const [dateobj, setDate] = useState();
-  const [mode, setMode] = useState('date');
   const [show, setShow] = useState(false);
-  const [time, setTime] = useState('');
-  const [tempdate, settempDate] = useState(new Date());
-  const [countvalue, setcountValue] = useState(1);
-  const [countindex, setcountindex] = useState();
-
-  const [packageID, setpackageID] = React.useState([]);
-  const [interID, setinterID] = React.useState([]);
-  const [nightID, setnightID] = React.useState([]);
+ 
   const [tdate, settDate] = useState(new Date());
-  const [atlerNumber, setAlterNUmber] = useState(null);
-  const [vehicleTypeVisible, setVehicleTypeVisible] = useState(false);
-  const [selectVehicle, setSelectVehicle] = useState('open type');
-  const [selectVehicleType, setSelectVehicleType] = useState(false);
   const [vehicleType, setVehicleType] = useState([
     {
       id: 1,
@@ -110,15 +56,11 @@ const HomeScreen = ({ navigation, route }) => {
       name: 'closed type',
     },
   ]);
-  
-  // const [intercitydata, setIntercitydata] = useState<null>({
-  //   baseminute: 0,
-  //   basekm: 0,
-  //   basefare: 0,
-  // });
-  const [intercitydata, setIntercitydata] = useState({ baseminute: 0, basekm: 0, basefare: 0 });
-
-  // const [intercitydata, setIntercitydata] = useState('');
+  const [intercitydata, setIntercitydata] = useState({
+    baseminute: 0,
+    basekm: 0,
+    basefare: 0,
+  });
 
   // ================NEW WORK =======================
   const [goodType, setgoodType] = React.useState([]);
@@ -156,33 +98,54 @@ const HomeScreen = ({ navigation, route }) => {
     count: 1,
   });
   const [isfarepac, setisfarepac] = useState(false);
+  const [isgoodsty, setIsgoodsty] = useState(false);
   const [Farevalue, setFarevalue] = useState([]);
   const [selectedFarevalue, setselectedFarevalue] = useState([]);
-  const [selectInterBase, setselectInterBaseValue] = useState('');
   const refRBSheet = useRef();
   const [mobilenumber, setMobileNumber] = useState('');
   const refRBSheetGoodsType = useRef();
   const refRBSheetFareType = useRef();
   const refRBSheettripcount = useRef();
   const refRBSheetVehicleFare = useRef();
-
-  const [getDistance, segetDistance] = useState(route.params?.Distance.distance != undefined ? route.params?.Distance.distance : "00");
-  const [getInterCityFare, seGetInterCityFare] = useState('');
-
-  console.log("Params --------------------123 :", getDistance);
-
+  const refRBSheetHours = useRef();
+  const [ChooseVehicle, setChoosevehicle] = useState(null);
+  const [Hours, setHours] = useState([
+    {
+      id: 1,
+      hours: '1 hour',
+    },
+    {
+      id: 2,
+      hours: '2 hours',
+    },
+    {
+      id: 3,
+      hours: '3 hours',
+    },
+    {
+      id: 6,
+      hours: '6 hours',
+    },
+    {
+      id: 9,
+      hours: '9 hours',
+    },
+    {
+      id: 12,
+      hours: '12 hours',
+    },
+  ]);
+  const [selecthours, setSelecthours] = useState(null);
   useEffect(() => {
-    console.log("**************** WELCOME ***************");
-
     var date = moment().format('DD/MM/YYYY hh:mm A');
     setDate(date);
 
     navigation.setOptions({
       title: <Text>Create Load</Text>,
       headerRight: () => (
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{flexDirection: 'row'}}>
           <FontAwesome
-            style={{ padding: 10 }}
+            style={{padding: 10}}
             onPress={() => {
               refresh();
             }}
@@ -195,52 +158,31 @@ const HomeScreen = ({ navigation, route }) => {
       ),
     });
   }, []);
-  useEffect(
-    () => {
-      if (route?.params?.Distance.distance > 25) {
-        Getintercityfun();
-        console.log("VVVVVVVVVVVVV");
-        console.log("VVVVVVVVVVVVV");
-        console.log("VVVVVVVVVVVVV");
-        console.log("VVVVVVVVVVVVV");
-        console.log("VVVVVVVVVVVVV");
-
-      }
-
-    }, [route?.params?.Distance.distance != undefined]
-  )
 
   useEffect(() => {
-    // if(30 > 25)
-    //   {
-    //     console.log("zzzzzzzzzzzzzzzzzzzzz");
-    //     console.log("zzzzzzzzzzzzzzzzzzzzz");
-    //     console.log("zzzzzzzzzzzzzzzzzzzzz");
+    if (route?.params?.Distance.distance > 25) {
+      Getintercityfun();
+    }
+  }, [route?.params?.Distance.distance != undefined]);
 
-    //     Getintercityfun();
-    //   }
+  useEffect(() => {
     if (!origin) {
       setinitorigin('Please Select Pickup location');
       setinitdrop('Please Select Drop location');
       return;
     }
-    // console.log("origin ============ : ", origin + "        destination    " + destination);
     setinitorigin(origin.description);
     if (!destination) return;
     setinitdrop(destination.description);
-    // console.log(destination)
   }, [origin, destination]);
 
   useEffect(() => {
-
-
     AsyncStorage.getItem('userdata').then(userdata => {
       AsyncStorage.getItem('userToken').then(value => {
         let parseddata = JSON.parse(userdata);
         let myHeaders = new Headers();
         myHeaders.append('Authorization', 'Bearer ' + value);
         myHeaders.append('Content-Type', 'application/json');
-
         messaging()
           .getToken()
           .then(token => {
@@ -300,25 +242,152 @@ const HomeScreen = ({ navigation, route }) => {
     reload();
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log(" route.params?.Distance.distance",route?.params?.Distance?.distance);
-     if(route.params?.Distance.distance !== undefined)
-     {
-      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
-      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
-      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
-      console.log("rjkigvnjklsdvbnjklsdvnjklsbnjklsfdnsfdjlnsfjlvb");
-      
-      
-      Getintercityfun();
-     }
-      return () => {
-        // Do something when the screen is unfocused
-        // Useful for cleanup functions
-      };
-    }, [])
-  );
+  // GET VEHICLE DATA :
+  const GetVehicledata = async (data, fare, hour) => {
+    try {
+      console.log('SelectedGoodsType', data);
+      console.log('data', fare);
+      console.log('hour', hour);
+      console.log('<======================>');
+
+      AsyncStorage.getItem('userdata')
+        .then(userdata => {
+          let parseddata = JSON.parse(userdata);
+
+          AsyncStorage.getItem('userToken').then(value => {
+            var myHeaders = new Headers();
+            myHeaders.append('Authorization', 'Bearer ' + value);
+            var requestOptions = {
+              method: 'GET',
+              headers: myHeaders,
+              redirect: 'follow',
+            };
+            // if(=="")
+            console.log('selectedfareType', fare);
+            console.log('hour', hour);
+            console.log('parseddata.cityid', parseddata.cityid);
+
+            if (fare?.name == 'Meter Fare') {
+              const distancevalue = Math.round(data);
+              fetch(
+                `https://trucktaxi.co.in/api/customer/getmeterfareforall?distance=${distancevalue}&cityid=${parseddata.cityid}`,
+                requestOptions,
+              )
+                .then(response => response.json())
+                .then(result => {
+                  console.log('XXXXXXXXXXX', result?.data);
+
+                  setChoosevehicle(result?.data);
+                  setvehicleselected(result?.data[0]);
+                });
+            } else {
+              if (fare?.name == 'Package Fare') {
+                const distancevalue = Math.round(data);
+                console.log('dtattttt', hour, parseddata.cityid, distancevalue);
+
+                fetch(
+                  `https://trucktaxi.co.in/api/customer/getpackagesforall?hours=${hour?.id}&cityid=${parseddata.cityid}&distance=${distancevalue}`,
+                  requestOptions,
+                )
+                  .then(response => response.json())
+                  .then(result => {
+                    console.log('XXXXXXXXXXXpackage', result?.data);
+
+                    setChoosevehicle(result?.data);
+                    setvehicleselected(result?.data[0]);
+                  });
+                console.log('Package fare data');
+              } else {
+                if (fare?.name == 'Night Fare') {
+                  const distancevalue = Math.round(data);
+                  fetch(
+                    `https://trucktaxi.co.in/api/customer/getnightfareallvehicles?hours=${hour?.id}&cityid=${parseddata.cityid}&distance=${distancevalue}`,
+                    requestOptions,
+                  )
+                    .then(response => response.json())
+                    .then(result => {
+                      console.log('CCCCCCC NIGHTFARE', result?.data);
+
+                      setChoosevehicle(result?.data);
+                      setvehicleselected(result?.data[0]);
+                    });
+                  console.log('Night fare data');
+                } else {
+                  if (fare?.name == 'Intercity Fare') {
+                    const distancevalue = Math.round(data);
+                    fetch(
+                      `https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=${distancevalue}`,
+                      requestOptions,
+                    )
+                      .then(response => response.json())
+                      .then(result => {
+                        console.log('CCCCCCC INTERCITY', result?.data);
+                        setChoosevehicle(result?.data);
+                        setvehicleselected(result?.data[0]);
+                      });
+                    console.log('INTERCITY fare data');
+                  } else {
+                    console.log('ssssssssss data');
+                  }
+                }
+              }
+            }
+          });
+        })
+        .catch(error => console.log('CATCH IN GetVehicledata', error));
+    } catch (error) {
+      console.log('Catch IN GetVehicledata : ', error);
+    }
+  };
+  // GET INTERCITY DATA :
+
+  const Getintercitydata = async data => {
+    try {
+      console.log('TOTAL DISTANCE', data);
+      AsyncStorage.getItem('userToken')
+        .then(value => {
+          var myHeaders = new Headers();
+          myHeaders.append('Authorization', 'Bearer ' + value);
+          var requestOptions = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow',
+          };
+          fetch(
+            `https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=${data}`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              console.log('<====== GET CHOOSE VEHICLE =====>: ', result?.data);
+              setChoosevehicle(result?.data);
+              console.log('xxxxxxxxxxx', result?.data[0]);
+              setvehicleselected(result?.data[0]);
+            });
+        })
+        .catch(error => console.log('CATCH IN Getintercitydata', error));
+    } catch (error) {
+      console.log('Catch IN Getintercitydata : ', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!!route?.params?.Distance) {
+      console.log('Checking for Distance', route?.params?.Distance);
+      if (route?.params?.Distance?.distance > 25) {
+        Getintercitydata(route?.params?.Distance?.distance);
+      } else {
+        GetVehicledata(
+          route?.params?.Distance?.distance,
+          selectedfareType,
+          selecthours,
+        );
+        console.log(
+          'GetVehicledataGetVehicledataGetVehicledataGetVehicledataGetVehicledataGetVehicledataGetVehicledata',
+        );
+      }
+    }
+  }, [route?.params?.Distance]);
 
   const reload = () => {
     setshowLoading(true);
@@ -343,7 +412,7 @@ const HomeScreen = ({ navigation, route }) => {
 
         fetch(
           'https://trucktaxi.co.in/api/customer/getvehicletypes?cityid=' +
-          parseddata.cityid,
+            parseddata.cityid,
           requestOptions,
         )
           .then(response => response.json())
@@ -363,7 +432,7 @@ const HomeScreen = ({ navigation, route }) => {
           .then(response => response.json())
           .then(result => {
             setgoodType(result.data);
-            setSelectedGoodsType(result.data[0]);
+            // setSelectedGoodsType(result.data[0]);
           })
           .catch(error => console.log('error', error));
 
@@ -402,91 +471,6 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
-  const loadgoods = () => {
-    return goodType.map(good => <SelectItem title={good.goodsname} />);
-  };
-
-  // const loadpackage = () => {
-  //   return packageType.map(packag => (
-  //     <SelectItem
-  //       title={
-  //         <Text>
-  //           {packag.package} @ Rs.{packag.basefare}{' '}
-  //         </Text>
-  //       }
-  //     />
-  //   ));
-  // };
-  // const loadintercity = () => {
-  //   return intercityType.map(packag => (
-  //     <SelectItem
-  //       title={
-  //         <Text>
-  //           {packag.basekm} @ Rs.{packag.basefare}{' '}
-  //         </Text>
-  //       }
-  //     />
-  //   ));
-  // };
-  // const loadnight = () => {
-  //   return nightFareType.map(packag => (
-  //     <SelectItem
-  //       title={
-  //         <Text>
-  //           {packag.basekm} @ Rs.{packag.basefare}{' '}
-  //         </Text>
-  //       }
-  //     />
-  //   ));
-  // };
-
-  const BookingPreview = () => {
-    if (selectedvehcilelist == undefined) {
-      alert('Select Vehcile Type');
-    } else if (initorigin == 'Please Select Pickup location') {
-      alert('Select Pickup Location');
-    } else if (initdrop == 'Please Select Drop location') {
-      alert('Select Drop Location');
-    } else if (tripValue == undefined) {
-      alert('Select Trip Type');
-    } else if (goodValue == undefined) {
-      alert('Select Goods Type');
-    } else if (dateobj == '' || dateobj == undefined) {
-      alert('Enter Date And Time');
-    } else {
-      var datetosend = moment(dateobj, 'DD/MM/YYYY hh:mm A').format(
-        'DD/MM/YYYY',
-      );
-      var timetosend = moment(dateobj, 'DD/MM/YYYY hh:mm A').format('HH:mm');
-      console.log(datetosend);
-      console.log(timetosend);
-
-      navigation.navigate('offer', {
-        selectedvehcilelist: vehicleselected,
-        tripValue: tripValue,
-        packageid: packageID,
-        interID: interID,
-        nightID: nightID,
-        goodValue: goodValue,
-        tripTypeid: tripTypeid,
-        Packagevalue: Packageselcted,
-        intercityselcted: intercityselcted,
-        nightSelcted: nightSelcted,
-        tripcount: countvalue,
-        time: timetosend,
-        datetosend: datetosend,
-        alternativemobno: atlerNumber,
-        iscv: selectVehicleType,
-        nightFareType: nightSelcted,
-      });
-      setgoodType([]);
-    }
-  };
-
-  const loadtrips = () => {
-    return tripType.map(trips => <SelectItem title={trips.name} />);
-  };
-
   const onChange = dated => {
     try {
       var ndate = moment(dated).format('DD/MM/YYYY hh:mm A');
@@ -499,196 +483,108 @@ const HomeScreen = ({ navigation, route }) => {
 
   if (showLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
 
-  const onSelectVehicle = item => {
-    // console.log("item ============== : ",item);
-    setselectedvehcilelist(item);
-    setselectVehicleId(item.id);
-    // console.log(item)
-    AsyncStorage.getItem('userdata').then(userdata => {
-      AsyncStorage.getItem('userToken').then(value => {
-        let parseddata = JSON.parse(userdata);
-        var myHeaders = new Headers();
-        myHeaders.append('Authorization', 'Bearer ' + value);
-        var requestOptions = {
-          method: 'GET',
-          headers: myHeaders,
-          redirect: 'follow',
-        };
-        fetch(
-          'https://trucktaxi.co.in/api/customer/getpackages?vehicleid=' +
-          item.id +
-          '&cityid=' +
-          parseddata.cityid,
-          requestOptions,
-        )
-          .then(response => response.json())
-          .then(result => {
-            setshowLoading(false);
-            // console.log(result)
-            setpackageType(result.data);
-            loadpackage();
-          })
-          .catch(error => console.log('catch in get_Package_list:', error));
-
-        fetch(
-          'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
-          item.id +
-          '&cityid=' +
-          parseddata.cityid,
-          requestOptions,
-        )
-          .then(response => response.json())
-          .then(result => {
-            setshowLoading(false);
-            setintercityType(result.data);
-            loadintercity();
-          })
-          .catch(error => console.log('catch in get_interCity_list:', error));
-
-        fetch(
-          'https://trucktaxi.co.in/api/customer/getnightfare?vehicleid=' +
-          item.id +
-          '&cityid=' +
-          parseddata.cityid,
-          requestOptions,
-        )
-          .then(response => response.json())
-          .then(result => {
-            setshowLoading(false);
-            setNightFareType(result.data);
-            loadnight();
-          })
-          .catch(error => console.log('catch in get_night_list:', error));
-      });
-    });
-  };
-
   const selectedFaretype = item => {
-    AsyncStorage.getItem('userdata').then(userdata => {
-      AsyncStorage.getItem('userToken').then(value => {
-        let parseddata = JSON.parse(userdata);
-        var myHeaders = new Headers();
-        myHeaders.append('Authorization', 'Bearer ' + value);
-        var requestOptions = {
-          method: 'GET',
-          headers: myHeaders,
-          redirect: 'follow',
-        };
-        console.log('====================================');
-        console.log(parseddata.cityid);
-        console.log('====================================');
-        console.log('====================================');
-        console.log(item?.name, '0000000000000mmmm', vehicleselected?.id);
-        console.log('====================================');
-        if (item?.name == 'Package Fare') {
-          fetch(
-            'https://trucktaxi.co.in/api/customer/getpackages?vehicleid=' +
-            vehicleselected.id +
-            '&cityid=' +
-            parseddata.cityid,
-            requestOptions,
-          )
-            .then(response => response.json())
-            .then(result => {
-              setshowLoading(false);
-              console.log('<====== Package Fare =====>: ', result?.data);
-              const sortedPackages = result?.data.sort((a, b) => {
-                const hoursA = parseInt(a.baseminute);
-                const hoursB = parseInt(b.baseminute);
-                return hoursA - hoursB;
-              });
-              setFarevalue(sortedPackages);
-              setselectedFarevalue(sortedPackages[0]);
-              // loadpackage();
-            })
-            .catch(error => console.log('catch in get_Package_list:', error));
-        } else {
-          if (item?.name == 'Intercity Fare') {
-            console.log('intercity fare', requestOptions);
-            // console.log("Distance ================= :", route.params?.Distance.distance);
-
-
-            const requestOptions = {
-              method: "GET",
-              redirect: "follow"
-            };
-
-            fetch('https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' + route.params?.Distance.distance + '&vehicletype=' + vehicleselected.id, requestOptions)
-              .then((response) => response.json())
-              .then((result) => {
-                console.log("InterCity Fare Result *************** ", result);
-                setshowLoading(false);
-                setFarevalue(result?.data);
-                // setselectInterBaseValue(result?.data)
-                setselectedFarevalue(result?.data[0]);
-
-              })
-              .catch((error) => console.error("catch in getinterbase_amount :", error));
-
-            // fetch(
-            //   'https://trucktaxi.co.in/api/customer/getintercitylist?vehicleid=' +
-            //   vehicleselected.id +
-            //   '&cityid=' +
-            //   parseddata.cityid,
-            //   requestOptions,
-            // )
-            //   .then(response => response.json())
-            //   .then(result => {
-            //     // console.log('intercityType', result);
-            //     console.log(
-            //       '<====== Intercity Fare nnnnnnnnnnnnn =====>: ',
-            //       result?.data,
-            //     );
-
-            //     setshowLoading(false);
-            //     setFarevalue(result?.data);
-            //     setselectedFarevalue(result?.data[0]);
-            //     // loadintercity();
-            //   })
-            //   .catch(error =>
-            //     console.log('catch in get_interCity_list:', error),
-            //   );
-
-
-          } else {
-            if (item?.name == 'Night Fare') {
-              console.log('night fare');
-              fetch(
-                'https://trucktaxi.co.in/api/customer/getnightfare?vehicleid=' +
-                vehicleselected?.id +
-                '&cityid=' +
-                parseddata.cityid,
-                requestOptions,
-              )
-                // fetch(
-                //   'https://trucktaxi.co.in/api/customer/getnightfare?vehicleid=4&cityid=CBE001',
-                //   requestOptions,
-                // )
-                .then(response => response.json())
-                .then(result => {
-                  console.log('<====== Night Fare ==================>: ', result);
-                  setshowLoading(false);
-                  setFarevalue(result?.data);
-                  setselectedFarevalue(result?.data[0]);
-                  // loadnight();
-                })
-                .catch(error => console.log('catch in get_night_list:', error));
-            }
-          }
-        }
-      });
-    });
+    // AsyncStorage.getItem('userdata').then(userdata => {
+    //   AsyncStorage.getItem('userToken').then(value => {
+    //     let parseddata = JSON.parse(userdata);
+    //     var myHeaders = new Headers();
+    //     myHeaders.append('Authorization', 'Bearer ' + value);
+    //     var requestOptions = {
+    //       method: 'GET',
+    //       headers: myHeaders,
+    //       redirect: 'follow',
+    //     };
+    //     console.log('====================================');
+    //     console.log(parseddata.cityid);
+    //     console.log('====================================');
+    //     console.log('====================================');
+    //     console.log(item?.name, '0000000000000mmmm', vehicleselected?.id);
+    //     console.log('====================================');
+    //     if (item?.name == 'Package Fare') {
+    //       fetch(
+    //         'https://trucktaxi.co.in/api/customer/getpackages?vehicleid=' +
+    //           vehicleselected.id +
+    //           '&cityid=' +
+    //           parseddata.cityid,
+    //         requestOptions,
+    //       )
+    //         .then(response => response.json())
+    //         .then(result => {
+    //           setshowLoading(false);
+    //           console.log('<====== Package Fare =====>: ', result?.data);
+    //           const sortedPackages = result?.data.sort((a, b) => {
+    //             const hoursA = parseInt(a.baseminute);
+    //             const hoursB = parseInt(b.baseminute);
+    //             return hoursA - hoursB;
+    //           });
+    //           setFarevalue(sortedPackages);
+    //           setselectedFarevalue(sortedPackages[0]);
+    //           // loadpackage();
+    //         })
+    //         .catch(error => console.log('catch in get_Package_list:', error));
+    //     } else {
+    //       if (item?.name == 'Intercity Fare') {
+    //         console.log('intercity fare', requestOptions);
+    //         // console.log("Distance ================= :", route.params?.Distance.distance);
+    //         const requestOptions = {
+    //           method: 'GET',
+    //           redirect: 'follow',
+    //         };
+    //         fetch(
+    //           'https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' +
+    //             route.params?.Distance.distance +
+    //             '&vehicletype=' +
+    //             vehicleselected.id,
+    //           requestOptions,
+    //         )
+    //           .then(response => response.json())
+    //           .then(result => {
+    //             console.log('InterCity Fare Result *************** ', result);
+    //             setshowLoading(false);
+    //             setFarevalue(result?.data);
+    //             // setselectInterBaseValue(result?.data)
+    //             setselectedFarevalue(result?.data[0]);
+    //           })
+    //           .catch(error =>
+    //             console.error('catch in getinterbase_amount :', error),
+    //           );
+    //       } else {
+    //         if (item?.name == 'Night Fare') {
+    //           console.log('night fare');
+    //           fetch(
+    //             'https://trucktaxi.co.in/api/customer/getnightfare?vehicleid=' +
+    //               vehicleselected?.id +
+    //               '&cityid=' +
+    //               parseddata.cityid,
+    //             requestOptions,
+    //           )
+    //             .then(response => response.json())
+    //             .then(result => {
+    //               console.log(
+    //                 '<====== Night Fare ==================>: ',
+    //                 result,
+    //               );
+    //               setshowLoading(false);
+    //               setFarevalue(result?.data);
+    //               setselectedFarevalue(result?.data[0]);
+    //               // loadnight();
+    //             })
+    //             .catch(error => console.log('catch in get_night_list:', error));
+    //         }
+    //       }
+    //     }
+    //   });
+    // });
   };
 
   const booking = () => {
-    // navigation.navigate('offer');
-    if (route.params == undefined) {
+    if (route.params == undefined || selectedGoodsType == '') {
       ToastAndroid.show(
         'Please Select All Mandatory Fields',
         ToastAndroid.SHORT,
@@ -696,281 +592,123 @@ const HomeScreen = ({ navigation, route }) => {
     } else {
       const [day, month, year] = dateobj.split(' ')[0].split('/');
       const dateOnly = `${year}-${month}-${day}`;
-      const time = dateobj.split(' ')[1] + ' ' + dateobj.split(' ')[2];
-
+      const time = dateobj.split(' ')[1] + ' ' + dateobj.split(' ')[2];  
       navigation.navigate('offer', {
         location: route?.params?.data,
         Distance: route.params?.Distance,
         selectedvehcilelist: vehicleselected,
-        tripValue: selectedfareType?.name,
+        tripValue:
+          route?.params?.Distance.distance > 25
+            ? 'Intercity Fare'
+            : selectedfareType?.name,
         packageid:
-          selectedfareType?.name == 'Package Fare' ? selectedfareType?.id : '',
+          route?.params?.Distance.distance > 25
+            ? ''
+            : selectedfareType?.name == 'Package Fare'
+            ? vehicleselected?.id
+            : '',
         interID:
-          selectedfareType?.name == 'Intercity Fare'
-            ? selectedfareType?.id
+          route?.params?.Distance.distance > 25
+            ? ''
+            : selectedfareType?.name == 'Intercity Fare'
+            ? vehicleselected?.id
             : '',
         nightID:
-          selectedfareType?.name == 'Night Fare' ? selectedfareType?.id : '',
+          route?.params?.Distance.distance > 25
+            ? ''
+            : selectedfareType?.name == 'Night Fare'
+            ? vehicleselected?.id
+            : '',
         goodValue: selectedGoodsType,
-        tripTypeid: tripTypeid,
+        tripTypeid:
+          route?.params?.Distance.distance > 25
+            ? 3
+            : selectedfareType?.name == 'Night Fare'
+            ? 4
+            : selectedfareType?.name == 'Intercity Fare'
+            ? 3
+            : selectedfareType?.name == 'Package Fare'
+            ? 2
+            : 1,
         Packagevalue:
           selectedfareType?.name == 'Package Fare' ? selectedFarevalue : '',
         intercityselcted:
           selectedfareType?.name == 'Intercity Fare' ? selectedFarevalue : '',
         nightSelcted:
           selectedfareType?.name == 'Night Fare' ? selectedFarevalue : '',
-        tripcount: countvalue,
+        // tripcount: countvalue,
         time: time,
         datetosend: dateOnly,
         alternativemobno: mobilenumber,
-        iscv: vehicleselected,
+        iscv:selectedVehicletype?.name == "open type" ? false : true ,
         nightFareType:
           selectedfareType?.name == 'Night Fare' ? selectedFarevalue : '',
       });
-
-      // var data = {
-      //   selectedvehcilelist: selectedVehicle,
-      //   // tripValue: tripValue,
-      //   fare: selectFareid,
-      //   fareName: selectFareName,
-      //   tripTypeid: '',
-      //   nighttype: selectNight,
-      //   Packagevalue: selectPackage,
-      //   goodValue: selectGoodsName,
-      //   intercitytype: selectIntercity,
-      //   tripcount: 0,
-      //   time: timetosend,
-      //   datetosend: datetosend,
-      //   address: locations,
-      //   pickup: locations.pickup.Description,
-      //   drop: locations.drop.Description,
-      //   noVehicles: noVehicles,
-      //   distance: locations?.distance,
-      // };
-
-      console.log('goo to homescreen', dateOnly);
-
-      // const data = {
-      //   Packagevalue: {
-      //     basefare: '1500',
-      //     basekm: '30',
-      //     baseminute: '6 Hours',
-      //     id: 10,
-      //     package: '6 Hours',
-      //   },
-      //   address: {
-      //     distance: 3.958,
-      //     drop: {
-      //       Description: 'Ukkadam, Coimbatore, Tamil Nadu',
-      //       position: [Object],
-      //     },
-      //     pickup: {
-      //       Description: 'Ram Nagar, Coimbatore, Tamil Nadu',
-      //       position: [Object],
-      //     },
-      //   },
-      //   datetosend: '2024-11-11',
-      //   distance: 3.958,
-      //   drop: 'Ukkadam, Coimbatore, Tamil Nadu',
-      //   fare: '2',
-      //   fareName: 'Package Fare',
-      //   goodValue: 'Tools & Spare parts',
-      //   intercitytype: {},
-      //   nighttype: {},
-      //   noVehicles: {
-      //     label: '1',
-      //     value: '1',
-      //   },
-      //   pickup: 'Ram Nagar, Coimbatore, Tamil Nadu',
-      //   selectedvehcilelist: {
-      //     addkmcharge: '20',
-      //     addminutecharge: '3',
-      //     feet: '7.5 feet',
-      //     id: 1,
-      //     loadcapacity: '1000 kgs',
-      //     url: 'https://trucktaxi.co.in/api/images/tataace.png',
-      //     vehicletype: 'TataAce',
-      //   },
-      //   time: '13:50:00',
-      //   tripTypeid: '',
-      //   tripcount: 0,
-      // };
-
-      // navigation?.navigate('offer', data);
-      // navigation.navigate('bookpreview', data);
     }
   };
+
   const Getintercityfun = async () => {
     try {
       if (route?.params?.Distance.distance >= 25) {
         const requestOptions = {
-          method: "GET",
-          redirect: "follow"
+          method: 'GET',
+          redirect: 'follow',
         };
-        console.log(" route.params?.Distance.distance", route.params?.Distance.distance);
-        
-        fetch('https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' + route.params?.Distance.distance + '&vehicletype=' + vehicleselected.id, requestOptions)
-          .then((response) => response.json())
-          .then((result) => {
-            console.log("InterCity Fare Result *************** ", result?.data[0]);
+        console.log(
+          ' route.params?.Distance.distance',
+          route.params?.Distance.distance,
+        );
+
+        fetch(
+          'https://trucktaxi.co.in/api/customer/getinterbaseamount?distance=' +
+            route.params?.Distance.distance +
+            '&vehicletype=' +
+            vehicleselected.id,
+          requestOptions,
+        )
+          .then(response => response.json())
+          .then(result => {
             setshowLoading(false);
-            if (!result || !result.data || !Array.isArray(result.data) || result.data.length === 0) {
-              throw new Error("Invalid response: Data is undefined or empty");
+            if (
+              !result ||
+              !result.data ||
+              !Array.isArray(result.data) ||
+              result.data.length === 0
+            ) {
+              throw new Error('Invalid response: Data is undefined or empty');
             }
-            // setFarevalue(result?.data);
-            // setselectInterBaseValue(result?.data)
-            // setselectedFarevalue(result?.data[0]);
-            console.log("FareFareFareFareFareFareFareFare");
-            console.log("FareFareFareFareFareFareFareFare");
-            console.log("FareFareFareFareFareFareFareFare",result?.data[0]);
-            
-            setIntercitydata(result?.data[0])
-
+            setIntercitydata(result?.data[0]);
           })
-          .catch((error) => console.error("catch in getinterbase_amount :", error));
-        console.log("gggggggggggggggggggggggg");
+          .catch(error =>
+            console.error('catch in getinterbase_amount :', error),
+          );
       }
-
-
     } catch (error) {
-      console.log("Catch IN Intercity", error);
-
+      console.log('Catch IN Intercity', error);
     }
-  }
-  // console.log(" route.params?.Distance.distance  ****************************:", route.params?.Distance.distance)
+  };
 
   return (
-
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       <ScrollView
         style={{
           flex: 1,
           padding: 10,
           backgroundColor: '#D4D3D3',
           marginTop: 3,
-        }}>
-        <View style={{ flex: 1 }}>
-          <View style={{ flex: 1, gap: 10 }}>
-            <View style={{ gap: 10 }}>
-              <View style={{ marginTop: 25, marginBottom: 16 }}>
-                <Text
-                  style={{
-                    fontSize: 19,
-                    color: '#333333',
-                    fontFamily: Manrope.Medium,
-                    textTransform: 'capitalize',
-                  }}>
-                  Choose your Vehicle
-                </Text>
-              </View>
-              <FlatList
-                data={vehcilelist}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                renderItem={data => {
-                  const selected = vehicleselected?.id === data?.item?.id;
-                  return (
-                    <TouchableOpacity
-                      style={{
-                        marginRight: 20,
-                        borderWidth: selected ? 3 : 1,
-                        padding: 10,
-                        borderRadius: 5,
-                        borderColor: selected ? Color?.primary : Color?.grey,
-                      }}
-                      onPress={() => {
-                        setvehicleselected(data?.item);
-                        setSelectedFareType({ "_id": "5e9070ebfe84eb22b4243818", "id": "1", "name": "Meter Fare" });
-                      }}>
-                      <Image
-                        source={{ uri: data?.item?.url }}
-                        style={{
-                          height: 43,
-                          width: 76,
-                        }}
-                        resizeMode="contain"
-                      />
-                      <View>
-                        <Text
-                          style={{
-                            color: Color.black,
-                            fontFamily: Manrope.Bold,
-                            fontSize: 13,
-                          }}>
-                          {data?.item?.vehicletype}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            color: Color.black,
-                            fontFamily: Manrope.Bold,
-                            fontSize: 12,
-                          }}>
-                          {data?.item?.loadcapacity}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                }}
-                keyExtractor={(item, index) => index}
-              />
-            </View>
-            <View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 10,
-                  marginTop: 20,
-                  alignItems: 'center',
-                }}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    color: Color.black,
-                    fontFamily: Manrope.Medium,
-                    textTransform: 'capitalize',
-                  }}>
-                  Vehicle Type : { }
-                </Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    refRBSheet?.current?.open();
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 5,
-                    padding: 5,
-                  }}>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      color: Color.black,
-                      fontFamily: Manrope.Medium,
-                      textTransform: 'uppercase',
-                    }}>
-                    {selectedVehicletype?.name}
-                  </Text>
-                  <Iconviewcomponent
-                    Icontag={'AntDesign'}
-                    iconname={'down'}
-                    icon_size={20}
-                    icon_color={Color.black}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-          <View style={{ gap: 10 }}>
-            <View style={{ marginTop: 10 }}>
+        }}
+      
+        >
+        <View style={{flex: 1}}>
+          <View style={{gap: 10}}>
+            <View style={{marginTop: 10}}>
               {route?.params == undefined ? (
                 <View>
                   <View
                     style={{
                       gap: 10,
                     }}>
-                    <View style={{ gap: 35 }}>
+                    <View style={{gap: 35}}>
                       <Text
                         style={{
                           fontSize: 18,
@@ -1012,7 +750,7 @@ const HomeScreen = ({ navigation, route }) => {
                   </View>
                 </View>
               ) : (
-                <View style={{ gap: 10 }}>
+                <View style={{gap: 10}}>
                   <View
                     style={{
                       gap: 10,
@@ -1028,15 +766,16 @@ const HomeScreen = ({ navigation, route }) => {
                         Pickup Location :
                       </Text>
                     </View>
-                    <View style={{
-                      backgroundColor: '#EEEEEE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: 15,
-                      borderRadius: 30,
-                      flexDirection: 'row',
-                      gap: 20
-                    }}>
+                    <View
+                      style={{
+                        backgroundColor: '#EEEEEE',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: 15,
+                        borderRadius: 30,
+                        flexDirection: 'row',
+                        gap: 20,
+                      }}>
                       <Iconviewcomponent
                         Icontag={'FontAwesome6'}
                         iconname={'location-dot'}
@@ -1049,15 +788,25 @@ const HomeScreen = ({ navigation, route }) => {
                           color: Color.black,
                           fontFamily: Manrope.Medium,
                           textTransform: 'capitalize',
-                          width: width / 1.45,
+                          width: width / 1.7,
                         }}
                         numberOfLines={1}
-                        onPress={() => {
-                          navigation.navigate('Map_screen');
-                        }}
+                       
                       >
                         {route.params?.data?.pickup?.Address}
                       </Text>
+                    
+                      <Iconviewcomponent
+                        Icontag={'MaterialIcons'}
+                        iconname={'edit'}
+                        icon_size={20}
+                        icon_color={Color.primary}
+                        onpress={() => {
+                          navigation.navigate('Map_screen', {
+                            data: {pickup: true},
+                          });
+                        }}
+                      />
                     </View>
                   </View>
                   <View
@@ -1075,15 +824,16 @@ const HomeScreen = ({ navigation, route }) => {
                         Drop Location :
                       </Text>
                     </View>
-                    <View style={{
-                      backgroundColor: '#EEEEEE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: 15,
-                      borderRadius: 30,
-                      flexDirection: 'row',
-                      gap: 20,
-                    }}>
+                    <View
+                      style={{
+                        backgroundColor: '#EEEEEE',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: 15,
+                        borderRadius: 30,
+                        flexDirection: 'row',
+                        gap: 20,
+                      }}>
                       <Iconviewcomponent
                         Icontag={'FontAwesome6'}
                         iconname={'location-dot'}
@@ -1096,18 +846,126 @@ const HomeScreen = ({ navigation, route }) => {
                           color: Color.black,
                           fontFamily: Manrope.Medium,
                           textTransform: 'capitalize',
-                          width: width / 1.45,
+                          width: width / 1.7,
                         }}
-                        onPress={() => {
-                          navigation.navigate('Map_screen');
-                        }}
+                       
                         numberOfLines={1}>
                         {route.params?.data?.drop?.Address}
                       </Text>
+                      <Iconviewcomponent
+                        Icontag={'MaterialIcons'}
+                        iconname={'edit'}
+                        icon_size={20}
+                        icon_color={Color.primary}
+                        onpress={() => {
+                          navigation.navigate('Map_screen', {
+                            data: {drop: true},
+                          });
+                        }}
+                      />
                     </View>
                   </View>
                 </View>
               )}
+            </View>
+            <View>
+              <View
+                style={{
+                  gap: 19,
+                  marginTop: 20,
+                  marginBottom: 10,
+                }}>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    color: Color.black,
+                    fontFamily: Manrope.Medium,
+                    textTransform: 'capitalize',
+                  }}>
+                  Vehicle Type : {}
+                </Text>
+                <View
+                  style={{flexDirection: 'row', alignItems: 'center', gap: 40}}>
+                  <Pressable
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                    }}
+                    onPress={() => {
+                      setselectedVehicletype({
+                        id: 1,
+                        name: 'open type',
+                      });
+                    }}>
+                    <Iconviewcomponent
+                      Icontag={'Fontisto'}
+                      iconname={
+                        selectedVehicletype?.id == 1
+                          ? 'radio-btn-active'
+                          : 'radio-btn-passive'
+                      }
+                      icon_size={20}
+                      icon_color={
+                        selectedVehicletype?.id == 1
+                          ? Color.primary
+                          : Color?.black
+                      }
+                    />
+                    <Text
+                      style={{
+                        color:
+                          selectedVehicletype?.id == 1
+                            ? Color?.primary
+                            : Color?.black,
+                        fontSize: 18,
+                        fontFamily: Manrope?.Regular,
+                      }}>
+                      Open Type
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                    }}
+                    onPress={() => {
+                      setselectedVehicletype({
+                        id: 2,
+                        name: 'Closed type',
+                      });
+                    }}>
+                    <Iconviewcomponent
+                      Icontag={'Fontisto'}
+                      iconname={
+                        selectedVehicletype?.id == 2
+                          ? 'radio-btn-active'
+                          : 'radio-btn-passive'
+                      }
+                      icon_size={20}
+                      icon_color={
+                        selectedVehicletype?.id == 2
+                          ? Color.primary
+                          : Color?.black
+                      }
+                    />
+                    <Text
+                      style={{
+                        color:
+                          selectedVehicletype?.id == 2
+                            ? Color?.primary
+                            : Color?.black,
+                        fontSize: 18,
+                        fontFamily: Manrope?.Regular,
+                      }}>
+                      Closed Type
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
             </View>
             <View
               style={{
@@ -1173,9 +1031,12 @@ const HomeScreen = ({ navigation, route }) => {
               )}
             </TouchableOpacity>
           </View>
-          <View style={{ gap: 15, marginTop: 15 }}>
-            <View style={{ gap: 10 }}>
-              <View style={{ width: width / 2.7 }}>
+
+          <View style={{gap: 15, marginTop: 15}}>
+            {/* Slected Goods Type */}
+
+            <View style={{gap: 10}}>
+              <View style={{width: width / 2.7}}>
                 <Text
                   style={{
                     fontSize: 18,
@@ -1222,7 +1083,9 @@ const HomeScreen = ({ navigation, route }) => {
                       fontFamily: Manrope.Regular,
                       textTransform: 'capitalize',
                     }}>
-                    {selectedGoodsType?.goodsname}
+                    {isgoodsty == true
+                      ? `${selectedGoodsType?.goodsname}`
+                      : 'select Goods type'}
                   </Text>
                   <Iconviewcomponent
                     Icontag={'AntDesign'}
@@ -1233,8 +1096,10 @@ const HomeScreen = ({ navigation, route }) => {
                 </View>
               </TouchableOpacity>
             </View>
-            <View style={{ gap: 10 }}>
-              <View style={{ width: width / 2.7 }}>
+
+
+            <View style={{gap: 10}}>
+              <View style={{width: width / 2.7}}>
                 <Text
                   style={{
                     fontSize: 18,
@@ -1247,9 +1112,9 @@ const HomeScreen = ({ navigation, route }) => {
               </View>
               <TouchableOpacity
                 onPress={() => {
-                  console.log("1111111111111111111111");
-                  route?.params?.Distance.distance > 25 ? null :
-                  refRBSheetFareType?.current?.open();
+                  route?.params?.Distance.distance > 25
+                    ? null
+                    : refRBSheetFareType?.current?.open();
                 }}
                 style={{
                   flexDirection: 'row',
@@ -1262,7 +1127,7 @@ const HomeScreen = ({ navigation, route }) => {
                 }}>
                 <Image
                   source={require('../assets/light.png')}
-                  style={{ height: 30, width: 30 }}
+                  style={{height: 30, width: 30}}
                 />
                 <View
                   style={{
@@ -1281,8 +1146,11 @@ const HomeScreen = ({ navigation, route }) => {
                       fontFamily: Manrope.Regular,
                       textTransform: 'capitalize',
                     }}>
-                    {/* {selectedfareType?.name} */}
-                    {`${route?.params?.Distance.distance > 25 ? "Intercity Fare" : selectedfareType?.name}`}
+                    {`${
+                      route?.params?.Distance.distance > 25
+                        ? 'Intercity Fare'
+                        : selectedfareType?.name
+                    }`}
                   </Text>
                   <Iconviewcomponent
                     Icontag={'AntDesign'}
@@ -1294,81 +1162,12 @@ const HomeScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
 
-            {selectedfareType?.name !== 'Meter Fare' && selectedfareType?.name !== "Intercity Fare" ? (
-              route?.params?.Distance.distance > 25 ?
-                null :
-                <View style={{ gap: 10 }}>
-                  <View style={{ width: width / 2.7 }}>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        color: Color.black,
-                        fontFamily: Manrope.Medium,
-                        textTransform: 'capitalize',
-                      }}>
-                      {selectedfareType?.name} :
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => {
-                      refRBSheetVehicleFare?.current?.open();
-                    }}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 20,
-                      backgroundColor: '#EEEEEE',
-                      borderRadius: 30,
-                      padding: 5,
-                      justifyContent: 'center',
-                    }}>
-                    <Iconviewcomponent
-                      Icontag={'AntDesign'}
-                      iconname={'dropbox'}
-                      icon_size={20}
-                      icon_color={Color.black}
-                    />
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        borderWidth: 1,
-                        borderColor: Color?.grey,
-                        padding: 10,
-                        width: width / 1.45,
-                      }}>
-                      {console.log("fffff", selectedFarevalue)
-                      }
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          color: Color.black,
-                          fontFamily: Manrope.Regular,
-                          textTransform: 'capitalize',
-                        }}>
-                        {isfarepac == true ? `${selectedFarevalue?.baseminute} -->  ${selectedFarevalue?.basekm} KM --> ₹${selectedFarevalue?.basefare}` : "select fare"}
-                      </Text>
-                      <Iconviewcomponent
-                        Icontag={'AntDesign'}
-                        iconname={'down'}
-                        icon_size={15}
-                        icon_color={Color.black}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                </View>
 
-            ) :
-              null
-            }
-
-
-
-
-            {selectedfareType?.name == 'Intercity Fare' || route?.params?.Distance.distance > 25 ? (
-              <View style={{ gap: 10 }}>
-                <View style={{ width: width / 2.7 }}>
+            {route?.params?.Distance.distance >
+            25 ? null : selectedfareType?.name == 'Intercity Fare' ||
+              selectedfareType?.name == 'Meter Fare' ? null : (
+              <View style={{gap: 10}}>
+                <View style={{width: width / 2.7}}>
                   <Text
                     style={{
                       fontSize: 18,
@@ -1376,10 +1175,13 @@ const HomeScreen = ({ navigation, route }) => {
                       fontFamily: Manrope.Medium,
                       textTransform: 'capitalize',
                     }}>
-                    Intercity Fare :
+                    Hours
                   </Text>
                 </View>
-                <View
+                <TouchableOpacity
+                  onPress={() => {
+                    refRBSheetHours?.current?.open();
+                  }}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -1405,15 +1207,15 @@ const HomeScreen = ({ navigation, route }) => {
                       padding: 10,
                       width: width / 1.45,
                     }}>
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          color: Color.black,
-                          fontFamily: Manrope.Regular,
-                          textTransform: 'capitalize',
-                        }}>
-                        {`${intercitydata?.baseminute} -->  ${intercitydata?.basekm} KM --> ₹${intercitydata?.basefare}`}
-                      </Text>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: Color.black,
+                        fontFamily: Manrope.Regular,
+                        textTransform: 'capitalize',
+                      }}>
+                      {selecthours ? selecthours?.hours : 'Select Hours'}
+                    </Text>
                     <Iconviewcomponent
                       Icontag={'AntDesign'}
                       iconname={'down'}
@@ -1421,205 +1223,122 @@ const HomeScreen = ({ navigation, route }) => {
                       icon_color={Color.black}
                     />
                   </View>
-                </View>
-              </View>
-            ) :
-              null
-            }
-
-
-
-            {/* <View style={{gap:10}}>
-            <View style={{width:width/2.7}}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: Color.black,
-                  fontFamily: Manrope.Medium,
-                  textTransform: 'capitalize',
-                }}>
-                Fare Type :
-              </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  refRBSheetFareType?.current?.open();
-                }}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                  borderWidth: 0.5,
-                  borderColor: Color?.black,
-                  borderRadius:5,
-                  padding: 10,
-                }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: Color.black,
-                    fontFamily: Manrope.Regular,
-                    textTransform: 'capitalize',
-                  }}>
-                  {selectedfareType?.name}
-                </Text>
-                <Iconviewcomponent
-                  Icontag={'AntDesign'}
-                  iconname={'down'}
-                  icon_size={20}
-                  icon_color={Color.black}
-                />
-              </TouchableOpacity>
-            </View> */}
-            {/* {selectedfareType?.name !== 'Meter Fare' ? (
-              <View style={{flexDirection: 'row',alignItems:'center'}}>
-               <View style={{width:width/2.7}}>
-                <Text
-                  style={{
-                    fontSize: 16,
-                  color: Color.black,
-                  fontFamily: Manrope.Medium,
-                    textTransform: 'capitalize',
-                  }}>
-                  {selectedfareType?.name} :
-                </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    refRBSheetVehicleFare?.current?.open();
-                  }}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 5,
-                    borderWidth: 0.5,
-                    borderColor: Color?.black,
-                    borderRadius:5,
-                    padding: 10,
-                  }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                    color: Color.black,
-                    fontFamily: Manrope.Regular,
-                      textTransform: 'capitalize',
-                    }}>
-                    {`${selectedFarevalue?.basekm} KM --> ₹${selectedFarevalue?.basefare}`}
-                  </Text>
-                  <Iconviewcomponent
-                    Icontag={'AntDesign'}
-                    iconname={'downcircle'}
-                    icon_size={20}
-                    icon_color={Color.black}
-                  />
                 </TouchableOpacity>
               </View>
-            ) : null} */}
-            <View style={{ gap: 10 }}>
-              <View style={{ width: width / 2.7 }}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    color: Color.black,
-                    fontFamily: Manrope.Medium,
-                    textTransform: 'capitalize',
-                  }}>
-                  NO of Vehicles :
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  refRBSheettripcount?.current?.open();
-                }}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 20,
-                  // borderWidth: 0.5,
-                  backgroundColor: '#EEEEEE',
-                  // borderColor: Color?.black,
-                  borderRadius: 30,
-                  padding: 5,
-                  justifyContent: 'center',
-                }}>
-                <Iconviewcomponent
-                  Icontag={'AntDesign'}
-                  iconname={'dropbox'}
-                  icon_size={20}
-                  icon_color={Color.black}
-                />
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderWidth: 1,
-                    borderColor: Color?.grey,
-                    padding: 10,
-                    width: width / 1.45,
-                  }}>
-                  <Text
-                    style={{
-                      fontSize: 16,
-                      color: Color.black,
-                      fontFamily: Manrope.Regular,
-                      textTransform: 'capitalize',
-                    }}>
-                    {selectedtripcount?.count}
-                  </Text>
-                  <Iconviewcomponent
-                    Icontag={'AntDesign'}
-                    iconname={'down'}
-                    icon_size={15}
-                    icon_color={Color.black}
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
+            )}
 
-            {/* <View style={{flexDirection: 'row',alignItems:'center'}}>
-            <View style={{width:width/2.7}}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: Color.black,
-                  fontFamily: Manrope.Medium,
-                  textTransform: 'capitalize',
-                }}>
-                NO of Vehicles :
-              </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  refRBSheettripcount?.current?.open();
-                }}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 5,
-                  borderWidth: 0.5,
-                  borderColor: Color?.black,
-                  borderRadius:5,
-                  padding: 10,
-                }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: Color.black,
-                    fontFamily: Manrope.Regular,
-                    textTransform: 'capitalize',
-                  }}>
-                  {selectedtripcount?.count}
-                </Text>
-                <Iconviewcomponent
-                  Icontag={'AntDesign'}
-                  iconname={'downcircle'}
-                  icon_size={20}
-                  icon_color={Color.black}
+            {/* CHOOSE VEHICLE */}
+            {route?.params == undefined ? null : (
+              <View style={{gap: 10}}>
+                <View style={{marginBottom: 16}}>
+                  {ChooseVehicle == undefined ? null : (
+                    <Text
+                      style={{
+                        fontSize: 19,
+                        color: '#333333',
+                        fontFamily: Manrope.Medium,
+                        textTransform: 'capitalize',
+                      }}>
+                      Choose your Vehicle
+                    </Text>
+                  )}
+               
+                </View>
+                <FlatList
+                  data={ChooseVehicle}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={data => {
+                    
+                    const selected =
+                      route?.params?.Distance.distance > 25
+                        ? vehicleselected?.vehicleID == data?.item?.vehicleID
+                        : selectedfareType?.name == 'Meter Fare' ||
+                          selectedfareType?.name == 'Intercity Fare'
+                        ? // vehicleselected?.vehicleID == data?.item?.vehicleID :selectedfareType?.name == 'Intercity Fare' ?
+                          vehicleselected?.vehicleID == data?.item?.vehicleID
+                        : vehicleselected?.id == data?.item?.id;
+                    return (
+                      <TouchableOpacity
+                        style={{
+                          marginRight: 20,
+                          borderWidth: selected ? 3 : 1,
+                          padding: 10,
+                          borderRadius: 5,
+                          borderColor: selected ? Color?.primary : Color?.grey,
+                        }}
+                        onPress={() => {
+                          console.log(data?.item);
+                          setvehicleselected(data?.item);
+                        }}
+                        disabled={
+                          selectedfareType?.name == 'Package Fare' &&
+                          data?.item?.id == null
+                            ? true
+                            : false
+                        }>
+                        <Image
+                          source={{uri: data?.item?.url}}
+                          style={{
+                            height: 43,
+                            width: 76,
+                          }}
+                          resizeMode="contain"
+                        />
+                        <View
+                          style={{
+                            gap: 8,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}>
+                          <View
+                            style={{
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}>
+                            <View>
+                              <Text
+                                style={{
+                                  color: Color.black,
+                                  fontFamily: Manrope.Bold,
+                                  fontSize: 13,
+                                }}>
+                                {data?.item?.vehicleName}
+                              </Text>
+                            </View>
+                            <View>
+                              <Text
+                                style={{
+                                  color: Color.black,
+                                  fontFamily: Manrope.Bold,
+                                  fontSize: 12,
+                                }}>
+                                {data?.item?.loadCapacity}
+                              </Text>
+                            </View>
+                          </View>
+                          <View>
+                            <Text
+                              style={{
+                                color: selected ? Color?.primary : Color?.black,
+                                fontSize: 12,
+                                fontFamily: Manrope?.SemiBold,
+                              }}>
+                              ₹{data?.item?.estimatedFare}
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }}
+                  keyExtractor={(item, index) => index}
                 />
-              </TouchableOpacity>
-            </View> */}
-            <View style={{ gap: 10 }}>
+              </View>
+            )}
+
+            {/* Alternative Mobile Number */}
+
+            <View style={{gap: 10}}>
               <Text
                 style={{
                   fontSize: 16,
@@ -1627,8 +1346,8 @@ const HomeScreen = ({ navigation, route }) => {
                   fontFamily: Manrope.Medium,
                   textTransform: 'capitalize',
                 }}>
-                Alternative Mobile Number{' '}
-                <Text style={{ color: '#888888' }}>{`( optional ) `}</Text>
+                Receiver Mobile Number{' '}
+                <Text style={{color: '#888888'}}>{`( optional ) `}</Text>
               </Text>
               <View
                 style={{
@@ -1652,7 +1371,7 @@ const HomeScreen = ({ navigation, route }) => {
                   +91-
                 </Text>
                 <TextInput
-                  placeholder="Alternative Mobile Number....."
+                  placeholder="Receiver Mobile Number....."
                   placeholderTextColor={'#888888'}
                   keyboardType="number-pad"
                   maxLength={10}
@@ -1669,7 +1388,9 @@ const HomeScreen = ({ navigation, route }) => {
             </View>
           </View>
         </View>
+
         {/* Select Vehicle Type Button Sheet */}
+
         <RBSheet
           ref={refRBSheet}
           closeOnDragDown={true}
@@ -1683,7 +1404,7 @@ const HomeScreen = ({ navigation, route }) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{ margin: 20, gap: 10 }}>
+          <View style={{margin: 20, gap: 10}}>
             <View
               style={{
                 justifyContent: 'center',
@@ -1700,7 +1421,7 @@ const HomeScreen = ({ navigation, route }) => {
                 Select Vehicle Type
               </Text>
             </View>
-            <ScrollView style={{ marginBottom: 35 }}>
+            <ScrollView style={{marginBottom: 35}}>
               {vehicleType?.map((item, index) => {
                 const Selected = selectedVehicletype?.id === item?.id;
 
@@ -1733,7 +1454,9 @@ const HomeScreen = ({ navigation, route }) => {
             </ScrollView>
           </View>
         </RBSheet>
+
         {/* Select Goods Type Button Sheet */}
+
         <RBSheet
           ref={refRBSheetGoodsType}
           closeOnDragDown={true}
@@ -1747,7 +1470,7 @@ const HomeScreen = ({ navigation, route }) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{ margin: 20, gap: 10 }}>
+          <View style={{margin: 20, gap: 10}}>
             <View
               style={{
                 justifyContent: 'center',
@@ -1764,7 +1487,7 @@ const HomeScreen = ({ navigation, route }) => {
                 Select Goods Type
               </Text>
             </View>
-            <ScrollView style={{ marginBottom: 35 }}>
+            <ScrollView style={{marginBottom: 35}}>
               {goodType?.map((item, index) => {
                 const Selected = selectedGoodsType?.goodsid === item?.goodsid;
 
@@ -1772,6 +1495,8 @@ const HomeScreen = ({ navigation, route }) => {
                   <TouchableOpacity
                     onPress={() => {
                       setSelectedGoodsType(item);
+                      setIsgoodsty(true);
+
                       refRBSheetGoodsType?.current?.close();
                     }}
                     style={{
@@ -1797,7 +1522,9 @@ const HomeScreen = ({ navigation, route }) => {
             </ScrollView>
           </View>
         </RBSheet>
+
         {/* Select Fare Type Button Sheet */}
+
         <RBSheet
           ref={refRBSheetFareType}
           closeOnDragDown={true}
@@ -1811,7 +1538,7 @@ const HomeScreen = ({ navigation, route }) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{ margin: 20, gap: 10 }}>
+          <View style={{margin: 20, gap: 10}}>
             <View
               style={{
                 justifyContent: 'center',
@@ -1828,28 +1555,55 @@ const HomeScreen = ({ navigation, route }) => {
                 Select Fare Type
               </Text>
             </View>
-            <ScrollView style={{ marginBottom: 35 }}>
+            <ScrollView style={{marginBottom: 35}}>
               {tripType?.map((item, index) => {
                 const Selected = selectedfareType?.name === item?.name;
-                console.log("item ------------------ :", JSON.stringify(item) + " distance *********" + route.params?.Distance.distance);
+                console.log(
+                  'item ------------------ :',
+                  JSON.stringify(item) +
+                    ' distance *********' +
+                    route.params?.Distance.distance,
+                );
+                // if(!!route?.params)
+                // {
+                //   if(route.params?.Distance.distance > 25)
+                //     {
+                //       Getintercitydata();
+                //     }else{
+                //       GetVehicledata();
+                //     }
+                // }
+
                 return (
                   <TouchableOpacity
                     onPress={() => {
-                      console.log("utejkbnvcjkdv",item);    
+                      console.log('cccccccccccccccccccvv', item);
                       setisfarepac(false);
                       selectedFaretype(item);
                       setSelectedFareType(item);
-                      if (item?.name == "Night Fare") {
-                        settripTypeid(4)
-                      } else {
-                        if (item?.name == "Package Fare") {
-                          settripTypeid(2)
+
+                      // if (item?.name == 'Night Fare') {
+                      //   settripTypeid(4);
+                      // } else {
+                      //   if (item?.name == 'Package Fare') {
+                      //     settripTypeid(2);
+                      //   } else {
+                      //     if (item?.name == 'Intercity Fare') {
+                      //       settripTypeid(3);
+                      //     } else {
+                      //       settripTypeid(1);
+                      //     }
+                      //   }
+                      // }
+                      if (!!route?.params?.Distance?.distance) {
+                        if (route?.params?.Distance?.distance > 25) {
+                          console.log('dcdcd');
                         } else {
-                          if (item?.name == "Intercity Fare") {
-                            settripTypeid(3)
-                          } else {
-                            settripTypeid(1)
-                          }
+                          GetVehicledata(
+                            route?.params?.Distance?.distance,
+                            item,
+                            selecthours,
+                          );
                         }
                       }
                       refRBSheetFareType?.current?.close();
@@ -1877,7 +1631,9 @@ const HomeScreen = ({ navigation, route }) => {
             </ScrollView>
           </View>
         </RBSheet>
+
         {/* Select Trip Count Button Sheet */}
+
         <RBSheet
           ref={refRBSheettripcount}
           closeOnDragDown={true}
@@ -1891,7 +1647,7 @@ const HomeScreen = ({ navigation, route }) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{ margin: 20, gap: 10 }}>
+          <View style={{margin: 20, gap: 10}}>
             <View
               style={{
                 justifyContent: 'center',
@@ -1908,7 +1664,7 @@ const HomeScreen = ({ navigation, route }) => {
                 Select Vehicles
               </Text>
             </View>
-            <ScrollView style={{ marginBottom: 35 }}>
+            <ScrollView style={{marginBottom: 35}}>
               {Tripcount?.map((item, index) => {
                 const Selected = selectedtripcount?.count === item?.count;
 
@@ -1941,7 +1697,9 @@ const HomeScreen = ({ navigation, route }) => {
             </ScrollView>
           </View>
         </RBSheet>
+
         {/* Select Vehicle fare amount Button Sheet */}
+
         <RBSheet
           ref={refRBSheetVehicleFare}
           closeOnDragDown={true}
@@ -1956,7 +1714,7 @@ const HomeScreen = ({ navigation, route }) => {
               backgroundColor: 'white',
             },
           }}>
-          <View style={{ margin: 20, gap: 10 }}>
+          <View style={{margin: 20, gap: 10}}>
             <View
               style={{
                 justifyContent: 'center',
@@ -1973,13 +1731,13 @@ const HomeScreen = ({ navigation, route }) => {
                 {selectedfareType?.name}
               </Text>
             </View>
-            <ScrollView style={{ marginBottom: 35 }}>
+            <ScrollView style={{marginBottom: 35}}>
               {Farevalue?.map((item, index) => {
                 const Selected = selectedFarevalue === item;
                 return (
                   <TouchableOpacity
                     onPress={() => {
-                      console.log("Selected item ****************** ", item);
+                      console.log('Selected item ****************** ', item);
 
                       setselectedFarevalue(item);
                       setisfarepac(true);
@@ -2007,7 +1765,95 @@ const HomeScreen = ({ navigation, route }) => {
             </ScrollView>
           </View>
         </RBSheet>
+
+        {/* Select Hours Button Sheet */}
+
+        <RBSheet
+          ref={refRBSheetHours}
+          closeOnDragDown={true}
+          closeOnPressMask={true}
+          height={400}
+          // height={selectedfareType?.name !== 'Intercity Fare' ? 300 : 700}
+          customStyles={{
+            wrapper: {
+              backgroundColor: '#00000088',
+            },
+            container: {
+              backgroundColor: 'white',
+            },
+          }}>
+          <View style={{margin: 20, gap: 10}}>
+            <View
+              style={{
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 10,
+              }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontFamily: Manrope.SemiBold,
+                  color: Color.primary,
+                  textAlign: 'center',
+                }}>
+                Select Hours
+              </Text>
+            </View>
+            <ScrollView style={{marginBottom: 35}}>
+              {Hours?.map((item, index) => {
+                const Selected = selecthours?.id === item?.id;  
+              
+                if(selectedfareType?.name == 'Night Fare')
+                {
+                  if(item?.id !== 1 && item?.id !== 2 && item?.id !== 3) 
+                  {
+                    return null 
+                  }
+                }
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelecthours(item);
+                      if (!!route?.params?.Distance?.distance) {
+                        if (route?.params?.Distance?.distance > 25) {
+                          console.log('dcdcd');
+                        } else {
+                          console.log('chess');
+
+                          GetVehicledata(
+                            route?.params?.Distance?.distance,
+                            selectedfareType,
+                            item,
+                          );
+                        }
+                      }
+                      refRBSheetHours?.current?.close();
+                    }}
+                    style={{
+                      padding: 10,
+                      borderWidth: 1,
+                      alignItems: 'center',
+                      marginBottom: 5,
+                      borderRadius: 5,
+                      borderColor: Selected ? Color?.primary : Color?.black,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontFamily: Manrope.SemiBold,
+                        textTransform: 'capitalize',
+                        color: Selected ? Color?.primary : Color.black,
+                      }}>
+                      {item?.hours}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </RBSheet>
       </ScrollView>
+
       <View>
         <TouchableOpacity
           style={{
@@ -2019,11 +1865,15 @@ const HomeScreen = ({ navigation, route }) => {
             gap: 5,
           }}
           onPress={() => {
-            if (isfarepac == false && selectedfareType?.name !== 'Meter Fare') {
-              ToastAndroid.show(
-                'Please Select All Mandatory Fields',
-                ToastAndroid.SHORT,
-              );
+            if (
+              selectedfareType?.name == 'Package Fare' ||
+              selectedfareType?.name == 'Night Fare'
+            ) {
+              if (selecthours !== null) {
+                booking();
+              } else {
+                ToastAndroid.show('please select hours', ToastAndroid.SHORT);
+              }
             } else {
               booking();
             }
@@ -2041,37 +1891,9 @@ const HomeScreen = ({ navigation, route }) => {
             Icontag={'FontAwesome'}
             iconname={'arrow-circle-right'}
             icon_size={20}
-            iconstyle={{ color: Color.white }}
-          />
-        </TouchableOpacity>
-        {/* <TouchableOpacity
-          style={{
-            backgroundColor: Color?.primary,
-            padding: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'row',
-            gap: 5,
-          }}
-          onPress={() => {
-          navigation.navigate('quizzApp');
-          }}>
-          <Text
-            style={{
-              fontSize: 16,
-              color: Color?.white,
-              fontFamily: Manrope.SemiBold,
-              textTransform: 'capitalize',
-            }}>
-            quizzApp
-          </Text>
-          <Iconviewcomponent
-            Icontag={'FontAwesome'}
-            iconname={'arrow-circle-right'}
-            icon_size={20}
             iconstyle={{color: Color.white}}
           />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -2117,7 +1939,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'Flex-start',
     alignItems: 'center',
-    // gap: width * 0.06,
     marginTop: height * 0.01,
   },
   datePickerStyle: {
@@ -2213,7 +2034,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 2,
   },
-  text: { color: 'white', fontWeight: 'bold' },
+  text: {color: 'white', fontWeight: 'bold'},
   locationView: {
     width: '95%',
     flexDirection: 'row',
@@ -2233,8 +2054,7 @@ const styles = StyleSheet.create({
     gap: height * 0.01,
   },
   locationText: {
-    width: width * 0.5, 
-    // maxHeight: height * 0.05,
+    width: width * 0.5,
     color: Color.black,
     gap: height * 0.03,
     overflow: 'hidden',

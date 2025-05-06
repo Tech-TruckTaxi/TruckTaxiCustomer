@@ -4,24 +4,15 @@ import {
     Text,
     TouchableOpacity,
     Dimensions,
-    SafeAreaView,
     StyleSheet,
     TextInput,
-    Button,
     StatusBar,
-    Image,
     ActivityIndicator,
-    Platform,
-    Alert,
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useTheme } from '@react-navigation/native';
-import { AuthContext } from '../context/context';
-import { P, H5, H4, H2, H6, H3 } from '../components/typography';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CommonActions } from '@react-navigation/native';
 
 
 const verifyBookingOtp = ({ navigation, route }) => {

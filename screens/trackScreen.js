@@ -172,7 +172,7 @@ const TrackDrive = ({ navigation, route }) => {
 
                     </View>
                     <View style={{ flex: 1, flexDirection: 'row', justifyContent: "space-between", marginTop: 20 }}>
-                        <Text style={{ marginRight: 20 }}><FontAwesome style={styles.icon, { marginLeft: 15 }} name="map-marker" color={'#828282'} size={20} />  Drop</Text>
+                        <Text style={{ marginRight: 20 }}><FontAwesome name="map-marker" color={'#828282'} size={20} />  Drop</Text>
 
                         <Text style={{ width: Dimensions.get('window').width - 90 }}>{item.toloc} </Text>
 

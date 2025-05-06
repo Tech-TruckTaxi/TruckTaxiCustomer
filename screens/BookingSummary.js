@@ -233,6 +233,8 @@ const BookingSummary = ({route, navigation}) => {
               // "offercode": "FIRST50",
               noofbookings: data?.noVehicles,
             });
+            console.log("BODY DATA ===>", raw);
+            
 
             const requestOptions = {
               method: 'POST',
@@ -241,7 +243,7 @@ const BookingSummary = ({route, navigation}) => {
               redirect: 'follow',
             };
 
-            console.log('Body ============= : ', requestOptions);
+            console.log('Body ===MMMMMM========== : ', requestOptions);
 
             fetch(
               'https://trucktaxi.co.in/api/customer/booknow',

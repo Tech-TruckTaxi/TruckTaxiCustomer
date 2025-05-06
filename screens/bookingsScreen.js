@@ -2,12 +2,14 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Linking,
   LogBox,
   Modal,
   RefreshControl,
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   useWindowDimensions,
   View,
@@ -25,7 +27,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
 import Color from '../Global/Color';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Manrope } from '../Global/FontFamily';
+import {Manrope} from '../Global/FontFamily';
 
 LogBox.ignoreAllLogs();
 
@@ -81,8 +83,14 @@ const Upcoming = ({
                 .then(response => response.json())
                 .then(result => {
                   console.log('LIVEEEEEEEEEEEEEEEEEEEE', result.data);
+                  const sortedData = result?.data?.sort((a, b) => {
+                    const dateA = new Date(a.bookedtime);
+                    const dateB = new Date(b.bookedtime);
+                    return dateB - dateA;
+                  });
+                  setData(sortedData);
+                  console.log('bookingData', sortedData);
 
-                  setData(result.data);
                   setLoading(false);
                 })
                 .catch(error => console.log('error', error));
@@ -108,13 +116,20 @@ const Upcoming = ({
         <FlatList
           // data={bookingData}
           data={bookingData.filter(
-            (item) => item?.statuscode === 2 || item?.statuscode === 6 || item?.statuscode === 9
+            item =>
+              item?.statuscode === 2 ||
+              item?.statuscode === 6 ||
+              item?.statuscode === 9,
           )}
           renderItem={({item, index}) => {
             console.log('====================================');
-            console.log("rr",item);
+            console.log('rr', item);
             console.log('====================================');
-            if (item?.statuscode != 2 && item?.statuscode != 6 && item?.statuscode !== 9) {
+            if (
+              item?.statuscode != 2 &&
+              item?.statuscode != 6 &&
+              item?.statuscode !== 9
+            ) {
               return null;
             }
             return (
@@ -227,7 +242,7 @@ const Upcoming = ({
                       fontFamily: Manrope?.Regular,
                       fontSize: 14,
                     }}>
-                  {item?.bookedtime}
+                    {item?.bookedtime}
                   </Text>
                 </View>
                 <View
@@ -288,9 +303,9 @@ const Upcoming = ({
                         fontFamily: Manrope?.Regular,
                         fontSize: 14,
                       }}>
-                     {item?.fromloc?.length > 20
-    ? `${item?.fromloc?.substring(0, 20)}...`
-    : item?.fromloc}
+                      {item?.fromloc?.length > 20
+                        ? `${item?.fromloc?.substring(0, 20)}...`
+                        : item?.fromloc}
                     </Text>
                   </View>
                 </View>
@@ -320,14 +335,14 @@ const Upcoming = ({
                         fontFamily: Manrope?.Regular,
                         fontSize: 14,
                       }}>
-                       {item?.toloc?.length > 20
-    ? `${item?.toloc?.substring(0, 20)}...`
-    : item?.toloc}
+                      {item?.toloc?.length > 20
+                        ? `${item?.toloc?.substring(0, 20)}...`
+                        : item?.toloc}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.line} />
-               
+
                 {item?.statuscode == 6 ? (
                   <View
                     style={{
@@ -360,69 +375,69 @@ const Upcoming = ({
                       </Text>
                     </View>
                   </View>
-                ):(
-                  <View style={{gap:10}}>
-                  <Text
-                    style={{
-                      color: Color?.primary,
-                      fontSize: 16,
-                      fontFamily: Manrope?.SemiBold,
-                    }}>
-                    Status
-                  </Text>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                    }}>
-                    <View style={{width: width / 2}}>
-                      <StepIndicator
-                        customStyles={customStyles}
-                        currentPosition={
-                          item?.statuscode == 2
-                            ? 1
-                            : 0
-                        }
-                        stepCount={2}
-                        labels={['Booked', 'Vehicle on the way']}
-                        
-                      />
-                    </View>
+                ) : (
+                  <View style={{gap: 10}}>
+                    <Text
+                      style={{
+                        color: Color?.primary,
+                        fontSize: 16,
+                        fontFamily: Manrope?.SemiBold,
+                      }}>
+                      Status
+                    </Text>
                     <View
                       style={{
-                        backgroundColor: '#884190',
-                        width: width / 3.8,
-                        height: height / 20,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: 5,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
                       }}>
-                      <Text
+                      <View style={{width: width / 2}}>
+                        <StepIndicator
+                          customStyles={customStyles}
+                          currentPosition={item?.statuscode == 2 ? 1 : 0}
+                          stepCount={2}
+                          labels={['Booked', 'Vehicle on the way']}
+                        />
+                      </View>
+                      <View
                         style={{
-                          color: Color?.white,
-                          fontFamily: Manrope?.Medium,
-                          fontSize: 14,
+                          backgroundColor: '#884190',
+                          width: width / 3.8,
+                          height: height / 20,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          borderRadius: 5,
                         }}>
-                        Track Now
-                      </Text>
+                        <Text
+                          style={{
+                            color: Color?.white,
+                            fontFamily: Manrope?.Medium,
+                            fontSize: 14,
+                          }}>
+                          Track Now
+                        </Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-                )
-              }
+                )}
               </View>
             );
           }}
           ListEmptyComponent={() => (
-            <View style={{height:height*0.8,alignItems:'center',justifyContent:'center'}}>
-              <Text
+            <View
               style={{
-                fontSize: 16,
-          fontFamily:Manrope?.Regular,
-                color: '#884190',
-              }}
-              >No Upcoming Bookings</Text>
-              </View>
+                height: height * 0.8,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontFamily: Manrope?.Regular,
+                  color: '#884190',
+                }}>
+                No Upcoming Bookings
+              </Text>
+            </View>
           )}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -458,6 +473,7 @@ const Completed = ({
   customerid,
 }) => {
   const [bookingData, setData] = useState([]);
+  const Token = useSelector(state => state.token);
 
   useEffect(() => {
     setBookingData();
@@ -519,392 +535,64 @@ const Completed = ({
   };
 
   const onRefresh = () => {
-    //set isRefreshing to true
     setIsRefreshing(true);
     setBookingData();
-    // and set isRefreshing to false at the end of your callApiMethod()
+  };
+
+  const getinvoice = data => {
+    try {
+      console.log(':dddddddddddd', data);
+
+      AsyncStorage.getItem('userToken').then(value => {
+        console.log('tokennnn', value);
+        const myHeaders = new Headers();
+        myHeaders.append('Authorization', `Bearer ${value}`);
+        const requestOptions = {
+          method: 'GET',
+          headers: myHeaders,
+          redirect: 'follow',
+        };
+        fetch(
+          `https://trucktaxi.co.in/api/customer/getinvoice?bookingid=${data?.id}`,
+          requestOptions,
+        )
+          .then(response => response.json())
+          .then(async result => {
+            if (result?.status === 200) {
+              const invoiceUrl = result.data[0].Invoiceurl;
+              console.log('invoice================ : ', invoiceUrl);
+              Linking.openURL(invoiceUrl);
+            }
+          })
+          .catch(error => console.error('catch in getinvoice_api:', error));
+      });
+    } catch (error) {
+      console.log('CATCH IN GETINVOICE', error);
+    }
   };
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: Color.white}}>
       {!loading ? (
         <FlatList
-          // data={bookingData}
           data={bookingData.filter(
-            (item) => item?.statuscode === 3 || item?.statuscode === 5
+            item => item?.statuscode === 3 || item?.statuscode === 5,
           )}
           renderItem={({item, index}) => {
             if (item?.statuscode !== 3 && item?.statuscode !== 5) {
               return null;
             }
             return (
-              // <View
-              //   key={index}
-              //   style={{
-              //     padding: 10,
-              //     margin: 10,
-              //     marginTop: 10,
-              //     borderRadius: 10,
-              //     borderWidth: 1,
-              //     borderColor:
-              //       item?.statuscode === 3
-              //         ? 'green'
-              //         : item?.statuscode == 5
-              //         ? 'red'
-              //         : Color.black3,
-              //   }}>
-              //   <View style={styles.container1}>
-              //     <View style={styles.container2}>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           marginTop: 10,
-              //         }}>
-              //         ID :
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           marginTop: 10,
-              //         }}>
-              //         Vehicle :
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           marginTop: 10,
-              //         }}>
-              //         Goods Details:
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           marginTop: 10,
-              //         }}>
-              //         Pickup :
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           marginTop: 10,
-              //         }}>
-              //         Drop :
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           marginTop: 10,
-              //         }}>
-              //         Status :
-              //       </Text>
-              //     </View>
-              //     <View style={styles.container2}>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           fontWeight: '500',
-              //           marginTop: 10,
-              //           // textTransform: 'uppercase',
-              //         }}>
-              //         {item?.id}
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           fontWeight: '500',
-              //           marginTop: 10,
-              //           // textTransform: 'uppercase',
-              //         }}>
-              //         {item?.vehicletype}
-              //       </Text>
-              //       <Text
-              //         style={{
-              //           color:
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3,
-              //           fontSize: 13,
-              //           fontWeight: '500',
-              //           marginTop: 10,
-              //           // textTransform: 'uppercase',
-              //         }}>
-              //         {item?.goods}
-              //       </Text>
-              //       <View style={styles.container3}>
-              //         <Icon2
-              //           name="location-dot"
-              //           size={13}
-              //           color={
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3
-              //           }
-              //           style={{marginTop: 10}}
-              //         />
-              //         <Text
-              //           style={{
-              //             color:
-              //               item?.statuscode === 3
-              //                 ? 'green'
-              //                 : item?.statuscode == 5
-              //                 ? 'red'
-              //                 : Color.black3,
-              //             fontSize: 13,
-              //             fontWeight: '500',
-              //             marginTop: 10,
-              //             // textTransform: 'uppercase',
-              //           }}
-              //           numberOfLines={1}>
-              //           {item?.fromloc}
-              //         </Text>
-              //       </View>
-              //       <View style={styles.container3}>
-              //         <Icon2
-              //           name="location-dot"
-              //           size={13}
-              //           color={
-              //             item?.statuscode === 3
-              //               ? 'green'
-              //               : item?.statuscode == 5
-              //               ? 'red'
-              //               : Color.black3
-              //           }
-              //           style={{marginTop: 10}}
-              //         />
-              //         <Text
-              //           style={{
-              //             color:
-              //               item?.statuscode === 3
-              //                 ? 'green'
-              //                 : item?.statuscode == 5
-              //                 ? 'red'
-              //                 : Color.black3,
-              //             fontSize: 13,
-              //             fontWeight: '500',
-              //             marginTop: 10,
-              //             // textTransform: 'uppercase',
-              //           }}
-              //           numberOfLines={1}>
-              //           {item?.toloc}
-              //         </Text>
-              //       </View>
-              //       <View
-              //         style={{
-              //           padding: 5,
-              //           backgroundColor: '#fff',
-              //         }}>
-              //         <Text
-              //           style={{
-              //             color:
-              //               item?.statuscode === 3
-              //                 ? 'green'
-              //                 : item?.statuscode == 5
-              //                 ? 'red'
-              //                 : Color.black3,
-              //             fontSize: 13,
-              //             fontWeight: '500',
-              //             marginTop: 10,
-              //             // textTransform: 'uppercase',
-              //           }}>
-              //           {item?.status}
-              //         </Text>
-              //       </View>
-              //     </View>
-              //   </View>
-              //   {/* <View style={styles.line} /> */}
-              //   {/* <Text style={styles.type}>Status:</Text>
-
-              //   <StepIndicator
-              //     customStyles={customStyles}
-              //     currentPosition={currentStatus}
-              //     stepCount={4}
-              //     labels={labels}
-              //   /> */}
-              // </View>
-
-              <View
-              style={{
-                margin: 20,
-                padding: 20,
-                backgroundColor: Color?.white,
-                borderWidth: 1,
-                borderColor: '#EEEEEE',
-                borderRadius: 5,
-                gap: 10,
-              }}>
               <View
                 style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
+                  margin: 20,
+                  padding: 20,
+                  backgroundColor: Color?.white,
+                  borderWidth: 1,
+                  borderColor: '#EEEEEE',
+                  borderRadius: 5,
+                  gap: 10,
                 }}>
-                <Text
-                  style={{
-                    color: '#333333',
-                    fontSize: 15,
-                    fontFamily: Manrope?.Regular,
-                  }}>
-                  {`ID : ${item?.id}`}{' '}
-                </Text>
-                <Text
-                  style={{
-                    color: Color?.black,
-                    fontFamily: Manrope?.Regular,
-                    fontSize: 14,
-                  }}>
-                {item?.bookedtime}
-                </Text>
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <Text
-                  style={{
-                    color: Color?.black,
-                    fontSize: 15,
-                    fontFamily: Manrope?.Regular,
-                  }}>
-                  Vehcile :
-                </Text>
-                <Text
-                  style={{
-                    color: Color?.black,
-                    fontSize: 12,
-                    fontFamily: Manrope?.Medium,
-                  }}>
-                  {item?.vehicletype}
-                </Text>
-              </View>
-              <View>
-                <Text
-                  style={{
-                    color: Color?.primary,
-                    fontSize: 16,
-                    fontFamily: Manrope?.SemiBold,
-                  }}>
-                  Location Details
-                </Text>
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <Text
-                  style={{
-                    color: '#333333',
-                    fontSize: 15,
-                    fontFamily: Manrope?.Regular,
-                  }}>
-                  Pickup :
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 3,
-                  }}>
-                  <Icon2 name="location-dot" size={13} color="#000" />
-                  <Text
-                    style={{
-                      color: Color?.black,
-                      fontFamily: Manrope?.Regular,
-                      fontSize: 14,
-                    }}>
-                   {item?.fromloc?.length > 20
-  ? `${item?.fromloc?.substring(0, 20)}...`
-  : item?.fromloc}
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}>
-                <Text
-                  style={{
-                    color: '#333333',
-                    fontSize: 15,
-                    fontFamily: Manrope?.Regular,
-                  }}>
-                  Drop :
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 3,
-                  }}>
-                  <Icon2 name="location-dot" size={13} color="#000" />
-                  <Text
-                    style={{
-                      color: Color?.black,
-                      fontFamily: Manrope?.Regular,
-                      fontSize: 14,
-                    }}>
-                     {item?.toloc?.length > 20
-  ? `${item?.toloc?.substring(0, 20)}...`
-  : item?.toloc}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.line} />
-             
-              {item?.statuscode == 5 ? (
                 <View
                   style={{
                     flexDirection: 'row',
@@ -912,103 +600,245 @@ const Completed = ({
                   }}>
                   <Text
                     style={{
-                      fontSize: 15,
                       color: '#333333',
+                      fontSize: 15,
                       fontFamily: Manrope?.Regular,
                     }}>
-                    Status
+                    {`ID : ${item?.id}`}{' '}
+                  </Text>
+                  <Text
+                    style={{
+                      color: Color?.black,
+                      fontFamily: Manrope?.Regular,
+                      fontSize: 14,
+                    }}>
+                    {item?.bookedtime}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <Text
+                    style={{
+                      color: Color?.black,
+                      fontSize: 15,
+                      fontFamily: Manrope?.Regular,
+                    }}>
+                    Vehcile :
+                  </Text>
+                  <Text
+                    style={{
+                      color: Color?.black,
+                      fontSize: 12,
+                      fontFamily: Manrope?.Medium,
+                    }}>
+                    {item?.vehicletype}
+                  </Text>
+                </View>
+                <View>
+                  <Text
+                    style={{
+                      color: Color?.primary,
+                      fontSize: 16,
+                      fontFamily: Manrope?.SemiBold,
+                    }}>
+                    Location Details
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <Text
+                    style={{
+                      color: '#333333',
+                      fontSize: 15,
+                      fontFamily: Manrope?.Regular,
+                    }}>
+                    Pickup :
                   </Text>
                   <View
                     style={{
-                      backgroundColor: '#DC3545',
-                      borderRadius: 129,
-                      width: width / 4.85,
-                      justifyContent: 'center',
+                      flexDirection: 'row',
                       alignItems: 'center',
+                      gap: 3,
                     }}>
+                    <Icon2 name="location-dot" size={13} color="#000" />
                     <Text
                       style={{
-                        color: Color?.white,
-                        fontSize: 13,
-                        fontFamily: Manrope?.Medium,
+                        color: Color?.black,
+                        fontFamily: Manrope?.Regular,
+                        fontSize: 14,
                       }}>
-                      Cancelled
+                      {item?.fromloc?.length > 20
+                        ? `${item?.fromloc?.substring(0, 20)}...`
+                        : item?.fromloc}
                     </Text>
                   </View>
                 </View>
-              ):(
-               <View>
-                 <View
+                <View
                   style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                   }}>
                   <Text
                     style={{
-                      fontSize: 15,
                       color: '#333333',
+                      fontSize: 15,
                       fontFamily: Manrope?.Regular,
                     }}>
-                    Status
+                    Drop :
                   </Text>
                   <View
                     style={{
-                      backgroundColor: '#27AE60',
-                      borderRadius: 129,
-                      width: width / 4.66,
-                      justifyContent: 'center',
+                      flexDirection: 'row',
                       alignItems: 'center',
+                      gap: 3,
                     }}>
+                    <Icon2 name="location-dot" size={13} color="#000" />
                     <Text
                       style={{
-                        color: Color?.white,
-                        fontSize: 13,
-                        fontFamily: Manrope?.Medium,
+                        color: Color?.black,
+                        fontFamily: Manrope?.Regular,
+                        fontSize: 14,
                       }}>
-                      Completed
+                      {item?.toloc?.length > 20
+                        ? `${item?.toloc?.substring(0, 20)}...`
+                        : item?.toloc}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.line} />
-                <TouchableOpacity style={{backgroundColor:Color?.primary,alignItems:'center',justifyContent:'center',padding:10,borderRadius:5}}>
-                 <View style={{alignItems:'center',gap:5,flexDirection:'row',justifyContent:'center'}}>
-                 <Ionicons name="cloud-download-outline" size={13} color="#fff" />
-                 <Text style={{
-                    fontSize:14,color:Color?.white,fontFamily:Manrope?.Medium
-                  }}>
-                  Download Invoice
-                  </Text>
-                 </View>
-                </TouchableOpacity>
-                </View>
-              )
-            }
-            </View>
+
+                {item?.statuscode == 5 ? (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: '#333333',
+                        fontFamily: Manrope?.Regular,
+                      }}>
+                      Status
+                    </Text>
+                    <View
+                      style={{
+                        backgroundColor: '#DC3545',
+                        borderRadius: 129,
+                        width: width / 4.85,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      <Text
+                        style={{
+                          color: Color?.white,
+                          fontSize: 13,
+                          fontFamily: Manrope?.Medium,
+                        }}>
+                        Cancelled
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}>
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          color: '#333333',
+                          fontFamily: Manrope?.Regular,
+                        }}>
+                        Status
+                      </Text>
+                      <View
+                        style={{
+                          backgroundColor: '#27AE60',
+                          borderRadius: 129,
+                          width: width / 4.66,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}>
+                        <Text
+                          style={{
+                            color: Color?.white,
+                            fontSize: 13,
+                            fontFamily: Manrope?.Medium,
+                          }}>
+                          Completed
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.line} />
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: Color?.primary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: 10,
+                        borderRadius: 5,
+                      }}
+                      onPress={() => {
+                        getinvoice(item);
+                      }}>
+                      <View
+                        style={{
+                          alignItems: 'center',
+                          gap: 5,
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                        }}>
+                        <Ionicons
+                          name="cloud-download-outline"
+                          size={13}
+                          color="#fff"
+                        />
+                        <Text
+                          style={{
+                            fontSize: 14,
+                            color: Color?.white,
+                            fontFamily: Manrope?.Medium,
+                          }}>
+                          Download Invoice
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             );
           }}
           ListEmptyComponent={() => (
-            <View style={{height:height*0.8,alignItems:'center',justifyContent:'center'}}>
-              <Text
+            <View
               style={{
-                fontSize: 16,
-          fontFamily:Manrope?.Regular,
-                color: '#884190',
-              }}
-              >No Trip History</Text>
-              </View>
+                height: height * 0.8,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontFamily: Manrope?.Regular,
+                  color: '#884190',
+                }}>
+                No Trip History
+              </Text>
+            </View>
           )}
           refreshControl={
-            <RefreshControl
-              // refreshing={isRefreshing}
-              onRefresh={onRefresh}
-              tintColor="#F8852D"
-            />
+            <RefreshControl onRefresh={onRefresh} tintColor="#F8852D" />
           }
         />
       ) : (
-        // <View>
-        //   <Text>ggggggggg</Text>
-        // </View>
         <View style={styles.load}>
           <ActivityIndicator size="large" color={Color.primary} />
         </View>
@@ -1181,16 +1011,15 @@ const BookingScreen = ({route, navigation}) => {
           <TabBar
             {...props}
             style={{backgroundColor: Color.white, height: 60}}
-            indicatorStyle={{backgroundColor: Color.primary, height: "100%"}}
-            renderLabel={({ route, focused }) => (
+            indicatorStyle={{backgroundColor: Color.primary, height: '100%'}}
+            renderLabel={({route, focused}) => (
               <Text
                 style={{
-                  color: !focused ? Color.black : "#FFFFFF",
+                  color: !focused ? Color.black : '#FFFFFF',
                   fontSize: 18,
                   fontFamily: 'Poppins-Bold',
                   textTransform: 'capitalize',
-                }}
-              >
+                }}>
                 {route.title}
               </Text>
             )}
@@ -1221,17 +1050,6 @@ const BookingScreen = ({route, navigation}) => {
           </View>
         </View>
       </Modal>
-
-      {/* BookingDetails modal */}
-      {/* <Modal
-          visible={detailsModal}
-          onRequestClose={() => setDetailsModal(false)}
-          transparent>
-          <View style={styles.modelBg}>
-            <BookingDetails />
-          </View>
-        </Modal> */}
-      {/* paymentmodal */}
       <Modal
         visible={paymentView}
         onRequestClose={() => setPaymentView(false)}

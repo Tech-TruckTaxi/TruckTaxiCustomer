@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {View} from 'react-native';
+import {Pressable, View} from 'react-native';
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -24,19 +24,20 @@ export const Iconviewcomponent = ({
   icon_size,
   icon_color,
   iconname,
+  onpress
 }) => {
   try {
     Icontag = findIcon_tag(Icontag);
 
     return (
-      <View style={viewstyle}>
+      <Pressable style={viewstyle} onPress={onpress}>
         <Icontag
           size={icon_size}
           color={icon_color}
           name={iconname}
           style={iconstyle}
         />
-      </View>
+      </Pressable>
     );
   } catch (error) {
     console.log('catch in iconview component ', error);

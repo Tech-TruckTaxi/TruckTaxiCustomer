@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {StatusBar, View, StyleSheet, LogBox} from 'react-native';
+import {StatusBar, View, StyleSheet, LogBox, Alert} from 'react-native';
 import {
   NavigationContainer,
   DefaultTheme as NavigationDefaultTheme,
@@ -25,8 +25,6 @@ import HomeScreen from './screens/HomeScreen';
 import WalletScreen from './screens/walletScreen';
 import BookingScreen from './screens/bookingsScreen';
 import ReferScreen from './screens/referScreen';
-//import MapviewScreen from './screens/mapviewScreen';
-//import PriceScreen from './screens/priceScreen';
 import PickupPointScreen from './screens/selectpickup';
 import DestinationPointScreen from './screens/selectdestination';
 
@@ -52,7 +50,7 @@ import MapScreen from './screens/Map/MapScreen';
 import BookingSummary from './screens/BookingSummary';
 import Map_screen from './screens/mapscreen';
 import 'react-native-get-random-values';
-import QuizzApp from './screens/Quizz/Quizz';
+import { requestPermission } from './storage/utils';
 
 LogBox.ignoreAllLogs();
 
@@ -203,6 +201,7 @@ const App = () => {
 
   useEffect(() => {
     SplashScreen.hide();
+    requestPermission();
   }, []);
 
   function bookingScreen() {
@@ -312,7 +311,6 @@ const App = () => {
                     options={{unmountOnBlur: true}}
                   />
                   <Drawer.Screen name="MapScreen" component={MapScreen} />
-                  <Drawer.Screen name="quizzApp" component={QuizzApp} />
                   <Drawer.Screen name="Map_screen" component={Map_screen} />
                   <Drawer.Screen name="referandearn" component={ReferScreen} />
                   <Drawer.Screen
@@ -333,14 +331,6 @@ const App = () => {
                     component={NotificationScreen}
                   />
                   <Drawer.Screen name="contact" component={ContactScreen} />
-                  <Drawer.Screen
-                    name="PrivacyandConditions"
-                    component={PrivacyandConditions}
-                  />
-                  <Drawer.Screen
-                    name="TermsandConditions"
-                    component={TermsandConditions}
-                  />
                 </Drawer.Navigator>
               ) : (
                 <RootStackScreen />

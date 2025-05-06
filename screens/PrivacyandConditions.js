@@ -153,8 +153,6 @@ const PrivacyandConditions = () => {
         </View>
 
         <View style={{ width: '100%', paddingHorizontal: 10, paddingVertical: 20 }}>
-          <Text style={{ width: '95%', paddingHorizontal: 10, fontSize: 16, color: Color.black, letterSpacing: 0.5, fontFamily: Manrope.SemiBold }}>Contact Us</Text>
-          <Text style={{ width: '95%', paddingHorizontal: 10, paddingVertical: 5, fontSize: 14, color: Color.black2, letterSpacing: 0.5, fontFamily: Manrope.SemiBold }}>#122, Sarojini street, Ram nagar, Coimbatore 641009</Text>
 
           <TouchableOpacity style={{ width: '95%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, marginVertical: 20 }}>
             <View style={{ width: 35, height: 35, justifyContent: 'center', alignItems: 'center', borderRadius: 50, borderColor: Color.primary, borderWidth: 1 }}>
